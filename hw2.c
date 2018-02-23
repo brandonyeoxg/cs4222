@@ -51,7 +51,7 @@ static void print_mpu_reading(int reading){
 static void get_mpu_reading(){
   int seconds = clock_seconds();
   if(prev_second != seconds){
-      printf("------------------------------------------%d %d :", prev_second, samples);
+      printf("------------------------------------------%d %d :\n", prev_second, samples);
       prev_second = seconds;
       samples = 0;
   }

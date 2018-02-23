@@ -1,4 +1,4 @@
-CONTIKI_PROJECT = hw2
+CONTIKI_PROJECT = hw2-read
 all: $(CONTIKI_PROJECT)
 
 CONTIKI = ../..
