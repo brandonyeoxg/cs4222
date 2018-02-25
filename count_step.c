@@ -11,20 +11,35 @@ struct Vector {
 };
 
 int getCSVLineCount(FILE *file);
-void getAccelInfo(FILE *file, struct Vector* dataSets, int numLines);
-struct Vector* getAccelData(char *filename);
-void printDataSets(struct Vector* dataSets, int numLines);
+void getAccelInfo(FILE *file, struct Vector *dataSets, int numLines);
+struct Vector* getAccelData(char *filename, int *numLines);
+void printDataSets(struct Vector *dataSets, int numLines);
 
-int main(int argc, char* argv[]) {
+/*== To be implemented! ==*/
+int getDeadReckoningStepCount(struct Vector *dataSets, int numLines) {
+	printf("===Printing from Dead Reckoning===\n");
+	printDataSets(dataSets, numLines);
+	return 0;
+}
+
+int main(int argc, char *argv[]) {
 	if (argc < 2) {
 		printf("Usage of this program: ./count_step team_accel.csv\n");
 		return -1;
 	}
-	struct Vector *dataSets = getAccelData(argv[1]);
+	struct Vector* dataSets;
+	int numLines = 0;
+	dataSets = getAccelData(argv[1], &numLines);
 
+	int numOfSteps = getDeadReckoningStepCount(dataSets, numLines);
+	
+	free(dataSets);
 	return 0;
 }
 
+/*
+	Gets the line count of the CSV file.
+*/
 int getCSVLineCount(FILE *file) {
 	int lines = 0;
 	char c;
@@ -36,13 +51,15 @@ int getCSVLineCount(FILE *file) {
 	return lines;
 }
 
-void getAccelInfo(FILE *file, struct Vector* dataSets, int numLines) {
-	printf("Getting Accel info\n");
+/*
+	Gets the acceleration data from the CSV file and stores it in the data struct Vector
+*/
+void getAccelInfo(FILE *file, struct Vector *dataSets, int numLines) {
 	char buf[MAX_BUF] = {0x0};
 	int i = 0;
 	char* field;
 	while(i < numLines) {
-		fgets(buf, MAX_BUF, (FILE*)file);
+		fgets(buf, MAX_BUF, (FILE *)file);
 		field = strtok(buf, ",");
 		dataSets[i].x = atof(field);
 
@@ -56,7 +73,11 @@ void getAccelInfo(FILE *file, struct Vector* dataSets, int numLines) {
 	}
 }
 
-struct Vector* getAccelData(char *filename) {
+/*
+	Returns the the number of the lines of the csv file read.
+	Outputs the sanitised acceleration data through the param outputDataSets as a struct Vector.
+*/
+struct Vector *getAccelData(char *filename, int *lines) {
 	printf("Opening file: %s\n", filename);
 	FILE *file = fopen(filename, "r'");
 	if (file == NULL) {
@@ -64,19 +85,22 @@ struct Vector* getAccelData(char *filename) {
 		exit(EXIT_FAILURE);
 	}
 
-	int numLines = getCSVLineCount(file);
+	*lines = getCSVLineCount(file);
 	
-	printf("File has: %d lines\n", numLines);
-	struct Vector* dataSets = (struct Vector*) malloc(sizeof(struct Vector)*numLines);
+	printf("File has: %d lines\n", *lines);
+	struct Vector* dataSets = (struct Vector *) malloc(sizeof(struct Vector) * (*lines));
 
 	fseek(file, 0, SEEK_SET);
-	getAccelInfo(file, dataSets, numLines);
+	getAccelInfo(file, dataSets, *lines);
 
-	printDataSets(dataSets, numLines);
+	fclose(file);
 	return dataSets;
 }
 
-void printDataSets(struct Vector* dataSets, int numLines) {
+/*
+	Prints the entire data set, used as a debug func.
+*/
+void printDataSets(struct Vector *dataSets, int numLines) {
 	int i;
 
 	for (i = 0; i < numLines; i++ ) {
