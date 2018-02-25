@@ -5,4 +5,4 @@ Reading the data can be done with: `hw2-read.bin`<br>
 The code can be edited in: `hw2.c` <br>
 The code can be build use: `./make-hw2` <br>
 
-Highest Sampling Rate: `189Hz`
+Highest Sampling Rate: `198Hz` at `Clock Time: 0.001`<br>
