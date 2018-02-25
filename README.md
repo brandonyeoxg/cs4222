@@ -12,4 +12,5 @@ Highest Sampling Rate: `198Hz` at `Clock Time: 0.001`<br>
 The code for step counting is: `count_step.c`<br>
 > To compile just use the script: make\_count\_step or gcc count\_step.c -o count\_step.
 >
-> The usage of the program is: ./count_step <csv file>.csv.
+> The usage of the program is: ./count_step \<csv file\>.csv.
+
