@@ -51,8 +51,6 @@ void getAccelInfo(FILE *file, struct Vector* dataSets, int numLines) {
 
 		field = strtok(NULL, ",");
 		dataSets[i].z = atof(field);
-
-		printf("Acc Data: x=%.2f, y=%.2f, z=%.2f\n", dataSets[i].x, dataSets[i].y, dataSets[i].z);
 		
 		i += 1;
 	}
@@ -66,7 +64,7 @@ struct Vector* getAccelData(char *filename) {
 		exit(EXIT_FAILURE);
 	}
 
-	int numLines = 1;//getCSVLineCount(file);
+	int numLines = getCSVLineCount(file);
 	
 	printf("File has: %d lines\n", numLines);
 	struct Vector* dataSets = (struct Vector*) malloc(sizeof(struct Vector)*numLines);
@@ -74,9 +72,8 @@ struct Vector* getAccelData(char *filename) {
 	fseek(file, 0, SEEK_SET);
 	getAccelInfo(file, dataSets, numLines);
 
-	// printDataSets(dataSets, numLines);
-	// return dataSets;
-	return NULL;
+	printDataSets(dataSets, numLines);
+	return dataSets;
 }
 
 void printDataSets(struct Vector* dataSets, int numLines) {
