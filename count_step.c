@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #define MAX_BUF 255
 #define BRANDON
@@ -10,6 +11,51 @@ struct Vector {
 	float y;
 	float z;
 };
+
+struct Vector vecAdd(struct Vector left, struct Vector right) {
+	struct Vector result;
+	result.x = left.x + right.x;
+	result.y = left.y + right.y;
+	result.z = left.z + right.z;
+
+	return result;
+}
+
+struct Vector vecMinus(struct Vector left, struct Vector right) {
+	struct Vector result;
+	result.x = left.x - right.x;
+	result.y = left.y - right.y;
+	result.z = left.z - right.z;
+
+	return result;
+}
+
+struct Vector vecMult(struct Vector left, struct Vector right) {
+	struct Vector result;
+	result.x = left.x * right.x;
+	result.y = left.y * right.y;
+	result.z = left.z * right.z;
+
+	return result;
+}
+
+struct Vector vecMultConst(struct Vector vec, float constant) {
+	struct Vector result;
+	result.x = vec.x * constant;
+	result.y = vec.y * constant;
+	result.z = vec.z * constant;
+
+	return result;
+}
+
+struct Vector vecDiv(struct Vector left, struct Vector right) {
+	struct Vector result;
+	result.x = left.x / right.x;
+	result.y = left.y / right.y;
+	result.z = left.z / right.z;
+
+	return result;
+}
 
 int getCSVLineCount(FILE *file);
 void getAccelInfo(FILE *file, struct Vector *dataSets, int numLines);
@@ -28,8 +74,97 @@ int getDeadReckoningStepCount(struct Vector *dataSets, int numLines) {
 	return 0;
 }
 
+struct Vector *getAccelMean(struct Vector *dataSets, int numLines) {
+	if (numLines < 1) {
+		printf("There are no lines to compute for the mean\n");
+		exit(EXIT_FAILURE);
+	}
+	int i;
+	float x ,y,z;
+	x = y = z = 0.0;
+	for(i = 0; i < numLines; ++i) {
+		x += dataSets[i].x;
+		y += dataSets[i].y;
+		z += dataSets[i].z;
+	}
+
+	struct Vector *outputVec = (struct Vector *) malloc(sizeof(struct Vector));
+
+	outputVec->x = x / numLines;
+	outputVec->y = y / numLines;
+	outputVec->z = z / numLines;
+
+	return outputVec;
+}
+
+struct Vector *getAccelStdDev(struct Vector *dataSets, int numSamples) {
+	struct Vector *meanVec = getAccelMean(dataSets, numSamples);
+	struct Vector *stdDevVec = (struct Vector *) malloc(sizeof(struct Vector));
+	int i;
+	for(i = 0; i < numSamples; ++i) {
+		stdDevVec->x += pow(dataSets[i].x - meanVec->x, 2);
+		stdDevVec->y += pow(dataSets[i].y - meanVec->y, 2);
+		stdDevVec->z += pow(dataSets[i].z - meanVec->z, 2);
+	}
+	free(meanVec);
+
+	stdDevVec->x = sqrt(stdDevVec->x / numSamples);
+	stdDevVec->y = sqrt(stdDevVec->y / numSamples);
+	stdDevVec->z = sqrt(stdDevVec->z / numSamples);
+
+	return stdDevVec;
+}
+
+/*
+	Gets the mean value of samples between fromIdx to toIdx(not inclusive)
+*/
+struct Vector *getAccelMeanFromTill(struct Vector *dataSets, int fromIdx, int toIdx) {
+	int totalSize = toIdx - fromIdx;
+	int k;
+	struct Vector *newSampleDataSet = (struct Vector *) malloc(sizeof(struct Vector) * totalSize);
+	struct Vector *outputMeanVec = (struct Vector *) malloc(sizeof(struct Vector));
+	for (k = 0; k < totalSize; ++k) {
+		int targetIdx = fromIdx + k;
+		newSampleDataSet[k].x = dataSets[targetIdx].x;
+		newSampleDataSet[k].y = dataSets[targetIdx].y;
+		newSampleDataSet[k].z = dataSets[targetIdx].z;
+	}
+
+	outputMeanVec = getAccelMean(newSampleDataSet, totalSize);
+
+	return outputMeanVec;
+}
+
+float getNormAutoCorrectStepCount(struct Vector *dataSets, int sample, int gamma) {
+	int k;
+	struct Vector *meanVec;
+	for(k = 0; k < gamma; ++k) {
+		// meanVec = getAccelMean();
+		// dataSets[sample+k] -
+	}
+}
+
 int getZeeStepCount(struct Vector *dataSets, int numLines) {
-	return -1;
+	int gMax = 40;
+	int gMin = 100;
+	int gOpt = 70;
+
+	// printf("===Vec Add===\n");
+	// struct Vector result = vecAdd(dataSets[0], dataSets[1]);
+	// printDataSets(&result, 1);
+	// printf("===Vec Minus===\n");
+	// result = vecMinus(dataSets[0], dataSets[1]);
+	// printDataSets(&result, 1);
+	// printf("===Vec Mult===\n");
+	// result = vecMult(dataSets[0], dataSets[1]);
+	// printDataSets(&result, 1);
+	// printf("===Vec Mult Const===\n");
+	// result = vecMultConst(dataSets[0], 10);
+	// printDataSets(&result, 1);
+	// printf("===Vec Div===\n");
+	// result = vecDiv(dataSets[0], dataSets[1]);
+	// printDataSets(&result, 1);
+	return 0;
 }
 
 int main(int argc, char *argv[]) {
@@ -40,6 +175,7 @@ int main(int argc, char *argv[]) {
 	struct Vector* dataSets;
 	int numLines = 0;
 	dataSets = getAccelData(argv[1], &numLines);
+	printDataSets(dataSets, numLines);
 #ifdef BRANDON
 	int numOfSteps = getZeeStepCount(dataSets, numLines);
 #else 
