@@ -20,8 +20,6 @@ def removeIntroduction():
     new_str = string[string.find("Time"):]
     newFile = "Without top.txt"
     open(newFile, 'w').write(new_str)
-    with open(newFile, "a") as myfile:
-        myfile.write("END")
     
     return newFile
 
