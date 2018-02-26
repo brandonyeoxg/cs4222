@@ -116,54 +116,85 @@ struct Vector *getAccelStdDev(struct Vector *dataSets, int numSamples) {
 }
 
 /*
-	Gets the mean value of samples between fromIdx to toIdx(not inclusive)
+	Gets the mean value of samples between fromIdx to the window size
 */
-struct Vector *getAccelMeanFromTill(struct Vector *dataSets, int fromIdx, int toIdx) {
-	int totalSize = toIdx - fromIdx;
+struct Vector *getAccelMeanFromTill(struct Vector *dataSets, int fromIdx, int windowSize) {
 	int k;
-	struct Vector *newSampleDataSet = (struct Vector *) malloc(sizeof(struct Vector) * totalSize);
+	struct Vector *newSampleDataSet = (struct Vector *) malloc(sizeof(struct Vector) * windowSize);
 	struct Vector *outputMeanVec = (struct Vector *) malloc(sizeof(struct Vector));
-	for (k = 0; k < totalSize; ++k) {
+	for (k = 0; k < windowSize; ++k) {
 		int targetIdx = fromIdx + k;
 		newSampleDataSet[k].x = dataSets[targetIdx].x;
 		newSampleDataSet[k].y = dataSets[targetIdx].y;
 		newSampleDataSet[k].z = dataSets[targetIdx].z;
 	}
 
-	outputMeanVec = getAccelMean(newSampleDataSet, totalSize);
-
+	outputMeanVec = getAccelMean(newSampleDataSet, windowSize);
+	free(newSampleDataSet);
 	return outputMeanVec;
 }
 
-float getNormAutoCorrectStepCount(struct Vector *dataSets, int sample, int gamma) {
+struct Vector *getAccelStdDevFromTill(struct Vector *dataSets, int fromIdx, int windowSize) {
 	int k;
-	struct Vector *meanVec;
-	for(k = 0; k < gamma; ++k) {
-		// meanVec = getAccelMean();
-		// dataSets[sample+k] -
+	struct Vector *newSampleDataSet = (struct Vector *) malloc(sizeof(struct Vector) * windowSize);
+	struct Vector *outputStdDevVec = (struct Vector *) malloc(sizeof(struct Vector));
+	for (k = 0; k < windowSize; ++k) {
+		int targetIdx = fromIdx + k;
+		newSampleDataSet[k].x = dataSets[targetIdx].x;
+		newSampleDataSet[k].y = dataSets[targetIdx].y;
+		newSampleDataSet[k].z = dataSets[targetIdx].z;
 	}
+
+	outputStdDevVec = getAccelStdDev(newSampleDataSet, windowSize);
+	free(newSampleDataSet);
+	return outputStdDevVec;
 }
 
-int getZeeStepCount(struct Vector *dataSets, int numLines) {
+struct Vector *getNormAutoCorrectStepCount(struct Vector *dataSets, int m, int gamma) {
+	int k;
+	struct Vector *meanVec;
+	struct Vector *outputCorrelation = (struct Vector *) malloc(sizeof(struct Vector *));
+	for(k = 0; k < gamma; ++k) {
+
+		// (a(m + k) - mean(m, gamma)) * (a(m + k + gamma) - mean(m + gamma, gamma))
+		meanVec = getAccelMeanFromTill(dataSets, m, gamma);
+		struct Vector left = vecMinus(dataSets[m + k], *meanVec);
+		meanVec = getAccelMeanFromTill(dataSets, m + gamma, gamma);
+		struct Vector right = vecMinus(dataSets[m + k + gamma], *meanVec);
+
+		struct Vector result = vecMult(left, right);
+		*outputCorrelation = vecAdd(*outputCorrelation, result); 
+	}
+	free(meanVec);
+
+	struct Vector *stdDevLeftVec, *stdDevRightVec;
+	stdDevLeftVec = getAccelStdDevFromTill(dataSets, m, gamma);
+	stdDevRightVec = getAccelStdDevFromTill(dataSets, m + gamma, gamma);
+
+	struct Vector denominatorVec;
+	denominatorVec = vecMult(*stdDevLeftVec, *stdDevRightVec);
+	denominatorVec = vecMultConst(denominatorVec, gamma);
+
+	*outputCorrelation = vecDiv(*outputCorrelation, denominatorVec);
+	free(stdDevLeftVec);
+	free(stdDevRightVec);
+
+	return outputCorrelation;
+}
+
+float getMaxCorrelation(struct Vector *dataSets, int m) {
 	int gMax = 40;
 	int gMin = 100;
 	int gOpt = 70;
+	return 0.0;
 
-	// printf("===Vec Add===\n");
-	// struct Vector result = vecAdd(dataSets[0], dataSets[1]);
-	// printDataSets(&result, 1);
-	// printf("===Vec Minus===\n");
-	// result = vecMinus(dataSets[0], dataSets[1]);
-	// printDataSets(&result, 1);
-	// printf("===Vec Mult===\n");
-	// result = vecMult(dataSets[0], dataSets[1]);
-	// printDataSets(&result, 1);
-	// printf("===Vec Mult Const===\n");
-	// result = vecMultConst(dataSets[0], 10);
-	// printDataSets(&result, 1);
-	// printf("===Vec Div===\n");
-	// result = vecDiv(dataSets[0], dataSets[1]);
-	// printDataSets(&result, 1);
+}
+
+int getZeeStepCount(struct Vector *dataSets, int numLines) {
+
+
+
+
 	return 0;
 }
 
