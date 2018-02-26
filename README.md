@@ -2,9 +2,10 @@
 ## General
 Erasing the data can be done with: `cc2650-erase-ext-flash.bin` <br>
 Reading the data can be done with: `hw2-read.bin`<br>
+Sensesing of the acceleration data can be done with: `cs4222demo-cc2650-accel-flash.bin` <br>
 
-The acceleration sampling code can be edited in: `hw2.c` <br>
-The acceleration sampling code can be compiled using: `./make-hw2` <br>
+The acceleration sampling code to find highest frequency can be edited in: `hw2.c` <br>
+The acceleration sampling code to find highest frequency can be compiled using: `./make-hw2` <br>
 
 Highest Sampling Rate: `198Hz` at `Clock Time: 0.001`<br>
 
