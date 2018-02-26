@@ -3,6 +3,7 @@
 #include <string.h>
 
 #define MAX_BUF 255
+#define BRANDON
 
 struct Vector {
 	float x;
@@ -15,11 +16,20 @@ void getAccelInfo(FILE *file, struct Vector *dataSets, int numLines);
 struct Vector* getAccelData(char *filename, int *numLines);
 void printDataSets(struct Vector *dataSets, int numLines);
 
-/*== To be implemented! ==*/
+/*
+== To be implemented! ==
+@param *dataSets represents the array of datasets that we have stored
+@param numLines represents the total number of the datasets in the CSV file - use this to find the max element in the dataSet
+@return the total number of step count based on the implementation
+*/
 int getDeadReckoningStepCount(struct Vector *dataSets, int numLines) {
 	printf("===Printing from Dead Reckoning===\n");
 	printDataSets(dataSets, numLines);
 	return 0;
+}
+
+int getZeeStepCount(struct Vector *dataSets, int numLines) {
+	return -1;
 }
 
 int main(int argc, char *argv[]) {
@@ -30,9 +40,12 @@ int main(int argc, char *argv[]) {
 	struct Vector* dataSets;
 	int numLines = 0;
 	dataSets = getAccelData(argv[1], &numLines);
-
+#ifdef BRANDON
+	int numOfSteps = getZeeStepCount(dataSets, numLines);
+#else 
 	int numOfSteps = getDeadReckoningStepCount(dataSets, numLines);
-	
+#endif
+	printf("Num of steps: %d\n", numOfSteps);
 	free(dataSets);
 	return 0;
 }
