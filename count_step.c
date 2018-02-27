@@ -261,13 +261,14 @@ struct Vector getMaxCorrelation(struct Vector *dataSets, int dataSetSize, int m,
 	for (gamma = gMin; gamma < gMax + 1; ++gamma) {
 		struct Vector correlation = getAutoCorrelation(dataSets, dataSetSize, m, gamma);
 		highestCorrelation = getHighestCorrelation(highestCorrelation, correlation);
-
 		if (vecEqual(highestCorrelation, correlation)) {
 			highestGamma = gamma;
-		}
+		}	
 	}
+	#ifdef DEBUG
+		printf("\n*** highestGamma: %d ***\n", highestGamma);
+	#endif
 	*gOpt = highestGamma;
-
 	return highestCorrelation;
 }
 
@@ -275,7 +276,7 @@ int getZeeStepCount(struct Vector *dataSets, int numSamples) {
 	printf("=== Starting Zee step counting ===\n");
 	int gMin = 40;
 	int gMax = 100;
-	int gOpt = gMin;
+	int gOpt = 0;
 	enum STATE state = IDLE;
 	int numSteps = 0;
 	int i;
@@ -284,20 +285,27 @@ int getZeeStepCount(struct Vector *dataSets, int numSamples) {
 		struct Vector highestCorrelation;
 		highestCorrelation = getMaxCorrelation(dataSets, numSamples, i, gMin, gMax, &gOpt);
 
-		if (vecMagnitude(dataSets[i]) < 0.01) {
+		if (vecMagnitude(dataSets[i]) < 0.1) {
 			state = IDLE;
 			numStepsCtr = 0;
+			#ifdef DEBUG
+			printf("*** STATE: IDLE ***\n");
+			#endif
 		} else if (vecMoreThanConst(highestCorrelation, 0.7)) {
 			state = WALKING;
 			#ifdef DEBUG
 			printf("*** STATE: WALKING ***\n");
-			printf("gOpt: %d\n", gOpt);
 			#endif
 		}
 
 		if (state == IDLE) {
 			continue;
 		}
+
+		#ifdef DEBUG
+		printf("gOpt: %d\n", gOpt);
+		#endif
+
 		if (numStepsCtr > gOpt / 2) {
 			numSteps += 1;
 			numStepsCtr = 0;
