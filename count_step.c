@@ -6,6 +6,8 @@
 #define MAX_BUF 255
 #define BRANDON
 
+enum STATE {IDLE = 0, WALKING =1};
+
 struct Vector {
 	float x;
 	float y;
@@ -55,6 +57,46 @@ struct Vector vecDiv(struct Vector left, struct Vector right) {
 	result.z = left.z / right.z;
 
 	return result;
+}
+
+int vecEqual(struct Vector left, struct Vector right) {
+	if (left.x != right.x) {
+		return 0;
+	}
+	if (left.y != right.y) { 
+		return 0;
+	}
+	if (left.z != right.z) {
+		return 0;
+	}
+	return 1;
+}
+
+int vecMoreThanConst(struct Vector v, float f) {
+	if (v.x <= f) {
+		return 0;
+	}
+	if (v.y <= f) {
+		return 0;
+	}
+	if (v.z <= f) {
+		return 0;
+	}
+	return 1;
+}
+
+float vecMagnitude(struct Vector input) {
+	return sqrt(pow(input.x, 2) + pow(input.y, 2) + pow(input.z, 2));
+}
+
+struct Vector getHighestCorrelation(struct Vector left, struct Vector right) {
+	float leftSum = left.x + left.y + left.z;
+	float rightSum = right.x + right.y + right.z;
+
+	if (leftSum > rightSum) {
+		return left;
+	}
+	return right;
 }
 
 int getCSVLineCount(FILE *file);
@@ -150,7 +192,7 @@ struct Vector *getAccelStdDevFromTill(struct Vector *dataSets, int fromIdx, int 
 	return outputStdDevVec;
 }
 
-struct Vector *getNormAutoCorrectStepCount(struct Vector *dataSets, int m, int gamma) {
+struct Vector *getAutoCorrelation(struct Vector *dataSets, int m, int gamma) {
 	int k;
 	struct Vector *meanVec;
 	struct Vector *outputCorrelation = (struct Vector *) malloc(sizeof(struct Vector *));
@@ -182,20 +224,51 @@ struct Vector *getNormAutoCorrectStepCount(struct Vector *dataSets, int m, int g
 	return outputCorrelation;
 }
 
-float getMaxCorrelation(struct Vector *dataSets, int m) {
-	int gMax = 40;
-	int gMin = 100;
-	int gOpt = 70;
-	return 0.0;
+struct Vector getMaxCorrelation(struct Vector *dataSets, int m, int gMin, int gMax, int *gOpt) {
+	int gamma;
+	struct Vector highestCorrelation;
+	int highestGamma = gMin;
+	for (gamma = gMin; gamma < gMax+1; ++gamma) {
+		struct Vector *correlation = getAutoCorrelation(dataSets, m, gamma);
+		highestCorrelation = getHighestCorrelation(highestCorrelation, *correlation);
+		if (vecEqual(highestCorrelation, *correlation)) {
+			highestGamma = gamma;
+		}
+	}
+	*gOpt = highestGamma;
+	return highestCorrelation;
 
 }
 
 int getZeeStepCount(struct Vector *dataSets, int numLines) {
+	int gMax = 40;
+	int gMin = 100;
+	int gOpt = gMin;
+	enum STATE state = IDLE;
+	int numSteps = 0;
+	int i;
+	int numStepsCtr = 0;
+	for (i = 0; i < numLines; ++i) {
+		struct Vector highestCorrelation;
+		highestCorrelation = getMaxCorrelation(dataSets, i, gMin, gMax, &gOpt);
+		if (vecMagnitude(dataSets[i]) < 0.01) {
+			state = IDLE;
+			numStepsCtr = 0;
+		} else if (vecMoreThanConst(highestCorrelation, 0.7)) {
+			state = WALKING;
+		}
 
+		if (state == IDLE) {
+			continue;
+		}
+		if (numStepsCtr > gOpt / 2) {
+			numSteps+=1;
+			numStepsCtr = 0;
+		}
+		numStepsCtr += 1;
+	}
 
-
-
-	return 0;
+	return numSteps;
 }
 
 int main(int argc, char *argv[]) {
