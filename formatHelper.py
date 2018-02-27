@@ -12,6 +12,7 @@ def getNodeID():
     new_str = string.split("Node ID: ")[1]
     temp = new_str.split(" ")[0]
     nodeID = temp.split()[0]
+#    print nodeID
     return nodeID
 
 def removeIntroduction():
@@ -20,6 +21,8 @@ def removeIntroduction():
     new_str = string[string.find("Time"):]
     newFile = "Without top.txt"
     open(newFile, 'w').write(new_str)
+#    with open(newFile, "a") as myfile:
+#        myfile.write("END")
     
     return newFile
 
@@ -50,7 +53,7 @@ def rejectLine(line):
     return boolean
 
 def convertToVelocity(gValue):
-    result = int(gValue) * 9.80665
+    result = int(gValue) * 9.80665 / 100
     return result
 
 def getTupleVelocity(x,y,z):
