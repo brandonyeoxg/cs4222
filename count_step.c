@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #define MAX_BUF 255
 
@@ -9,6 +10,10 @@ struct Vector {
 	float y;
 	float z;
 };
+
+float getVecMag(struct Vector v) {
+	return sqrt(pow(v.x, 2) + pow(v.y, 2) + pow(v.z, 2));
+}
 
 int getCSVLineCount(FILE *file);
 void getAccelInfo(FILE *file, struct Vector *dataSets, int numLines);
