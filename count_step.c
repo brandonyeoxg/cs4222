@@ -5,6 +5,7 @@
 
 #define MAX_BUF 255
 #define BRANDON
+#define DEBUG
 
 enum STATE {IDLE = 0, WALKING =1};
 
@@ -73,16 +74,16 @@ int vecEqual(struct Vector left, struct Vector right) {
 }
 
 int vecMoreThanConst(struct Vector v, float f) {
-	if (v.x <= f) {
-		return 0;
+	if (v.x > f) {
+		return 1;
 	}
-	if (v.y <= f) {
-		return 0;
+	if (v.y > f) {
+		return 1;
 	}
-	if (v.z <= f) {
-		return 0;
+	if (v.z > f) {
+		return 1;
 	}
-	return 1;
+	return 0;
 }
 
 float vecMagnitude(struct Vector input) {
@@ -97,6 +98,12 @@ struct Vector getHighestCorrelation(struct Vector left, struct Vector right) {
 		return left;
 	}
 	return right;
+}
+
+void vecInit(struct Vector *inVec) {
+	inVec->x = 0.0;
+	inVec->y = 0.0;
+	inVec->z = 0.0;
 }
 
 int getCSVLineCount(FILE *file);
@@ -116,7 +123,7 @@ int getDeadReckoningStepCount(struct Vector *dataSets, int numLines) {
 	return 0;
 }
 
-struct Vector *getAccelMean(struct Vector *dataSets, int numLines) {
+struct Vector getAccelMean(struct Vector *dataSets, int numLines) {
 	if (numLines < 1) {
 		printf("There are no lines to compute for the mean\n");
 		exit(EXIT_FAILURE);
@@ -130,29 +137,33 @@ struct Vector *getAccelMean(struct Vector *dataSets, int numLines) {
 		z += dataSets[i].z;
 	}
 
-	struct Vector *outputVec = (struct Vector *) malloc(sizeof(struct Vector));
+	struct Vector outputVec;
 
-	outputVec->x = x / numLines;
-	outputVec->y = y / numLines;
-	outputVec->z = z / numLines;
+	outputVec.x = x / numLines;
+	outputVec.y = y / numLines;
+	outputVec.z = z / numLines;
 
 	return outputVec;
 }
 
-struct Vector *getAccelStdDev(struct Vector *dataSets, int numSamples) {
-	struct Vector *meanVec = getAccelMean(dataSets, numSamples);
-	struct Vector *stdDevVec = (struct Vector *) malloc(sizeof(struct Vector));
+struct Vector getAccelStdDev(struct Vector *dataSets, int numSamples) {
+	#ifdef DEBUG
+	if (numSamples == 0) {
+		printf("getAccelStdDev num samples == 0\n");
+	}
+	#endif
+	struct Vector meanVec = getAccelMean(dataSets, numSamples);
+	struct Vector stdDevVec;
 	int i;
 	for(i = 0; i < numSamples; ++i) {
-		stdDevVec->x += pow(dataSets[i].x - meanVec->x, 2);
-		stdDevVec->y += pow(dataSets[i].y - meanVec->y, 2);
-		stdDevVec->z += pow(dataSets[i].z - meanVec->z, 2);
+		stdDevVec.x += pow(dataSets[i].x - meanVec.x, 2);
+		stdDevVec.y += pow(dataSets[i].y - meanVec.y, 2);
+		stdDevVec.z += pow(dataSets[i].z - meanVec.z, 2);
 	}
-	free(meanVec);
 
-	stdDevVec->x = sqrt(stdDevVec->x / numSamples);
-	stdDevVec->y = sqrt(stdDevVec->y / numSamples);
-	stdDevVec->z = sqrt(stdDevVec->z / numSamples);
+	stdDevVec.x = sqrt(stdDevVec.x / numSamples);
+	stdDevVec.y = sqrt(stdDevVec.y / numSamples);
+	stdDevVec.z = sqrt(stdDevVec.z / numSamples);
 
 	return stdDevVec;
 }
@@ -160,10 +171,17 @@ struct Vector *getAccelStdDev(struct Vector *dataSets, int numSamples) {
 /*
 	Gets the mean value of samples between fromIdx to the window size
 */
-struct Vector *getAccelMeanFromTill(struct Vector *dataSets, int fromIdx, int windowSize) {
+struct Vector getAccelMeanFromTill(struct Vector *dataSets, int dataSetSize, int fromIdx, int windowSize) {
 	int k;
+	if (fromIdx + windowSize >= dataSetSize) {
+		windowSize = (fromIdx + windowSize) - dataSetSize + 1;
+		#ifdef DEBUG
+		printf("*** getAccelMeanFromTill ***\n");
+		printf("Window Size: %d fromIdx: %d\n", windowSize, fromIdx); 
+		#endif		
+	}
 	struct Vector *newSampleDataSet = (struct Vector *) malloc(sizeof(struct Vector) * windowSize);
-	struct Vector *outputMeanVec = (struct Vector *) malloc(sizeof(struct Vector));
+	struct Vector outputMeanVec;
 	for (k = 0; k < windowSize; ++k) {
 		int targetIdx = fromIdx + k;
 		newSampleDataSet[k].x = dataSets[targetIdx].x;
@@ -173,13 +191,21 @@ struct Vector *getAccelMeanFromTill(struct Vector *dataSets, int fromIdx, int wi
 
 	outputMeanVec = getAccelMean(newSampleDataSet, windowSize);
 	free(newSampleDataSet);
+
 	return outputMeanVec;
 }
 
-struct Vector *getAccelStdDevFromTill(struct Vector *dataSets, int fromIdx, int windowSize) {
+struct Vector getAccelStdDevFromTill(struct Vector *dataSets, int dataSetSize, int fromIdx, int windowSize) {
 	int k;
+	if (fromIdx + windowSize >= dataSetSize) {
+		windowSize = (fromIdx + windowSize) - dataSetSize + 1;
+		#ifdef DEBUG
+		printf("*** getAccelStdDevFromTill ***\n");
+		printf("Window Size: %d fromIdx: %d\n", windowSize, fromIdx); 
+		#endif
+	}
 	struct Vector *newSampleDataSet = (struct Vector *) malloc(sizeof(struct Vector) * windowSize);
-	struct Vector *outputStdDevVec = (struct Vector *) malloc(sizeof(struct Vector));
+	struct Vector outputStdDevVec;
 	for (k = 0; k < windowSize; ++k) {
 		int targetIdx = fromIdx + k;
 		newSampleDataSet[k].x = dataSets[targetIdx].x;
@@ -189,81 +215,95 @@ struct Vector *getAccelStdDevFromTill(struct Vector *dataSets, int fromIdx, int 
 
 	outputStdDevVec = getAccelStdDev(newSampleDataSet, windowSize);
 	free(newSampleDataSet);
+
 	return outputStdDevVec;
 }
 
-struct Vector *getAutoCorrelation(struct Vector *dataSets, int m, int gamma) {
+struct Vector getAutoCorrelation(struct Vector *dataSets, int dataSetSize, int m, int gamma) {
 	int k;
-	struct Vector *meanVec;
-	struct Vector *outputCorrelation = (struct Vector *) malloc(sizeof(struct Vector *));
+	struct Vector meanVec;
+	vecInit(&meanVec);
+	struct Vector outputCorrelation;
+	vecInit(&outputCorrelation);
 	for(k = 0; k < gamma; ++k) {
-
+		if (m + k + gamma >= dataSetSize) {
+			break;
+		}
 		// (a(m + k) - mean(m, gamma)) * (a(m + k + gamma) - mean(m + gamma, gamma))
-		meanVec = getAccelMeanFromTill(dataSets, m, gamma);
-		struct Vector left = vecMinus(dataSets[m + k], *meanVec);
-		meanVec = getAccelMeanFromTill(dataSets, m + gamma, gamma);
-		struct Vector right = vecMinus(dataSets[m + k + gamma], *meanVec);
+		meanVec = getAccelMeanFromTill(dataSets, dataSetSize, m, gamma);
+		struct Vector left = vecMinus(dataSets[m + k], meanVec);
+		
+		meanVec = getAccelMeanFromTill(dataSets, dataSetSize, m + gamma, gamma);
+		struct Vector right = vecMinus(dataSets[m + k + gamma], meanVec);
 
 		struct Vector result = vecMult(left, right);
-		*outputCorrelation = vecAdd(*outputCorrelation, result); 
+		outputCorrelation = vecAdd(outputCorrelation, result); 
 	}
-	free(meanVec);
 
-	struct Vector *stdDevLeftVec, *stdDevRightVec;
-	stdDevLeftVec = getAccelStdDevFromTill(dataSets, m, gamma);
-	stdDevRightVec = getAccelStdDevFromTill(dataSets, m + gamma, gamma);
+	struct Vector stdDevLeftVec, stdDevRightVec;
+	stdDevLeftVec = getAccelStdDevFromTill(dataSets, dataSetSize, m, gamma);
+	stdDevRightVec = getAccelStdDevFromTill(dataSets, dataSetSize, m + gamma, gamma);
 
 	struct Vector denominatorVec;
-	denominatorVec = vecMult(*stdDevLeftVec, *stdDevRightVec);
+	denominatorVec = vecMult(stdDevLeftVec, stdDevRightVec);
 	denominatorVec = vecMultConst(denominatorVec, gamma);
 
-	*outputCorrelation = vecDiv(*outputCorrelation, denominatorVec);
-	free(stdDevLeftVec);
-	free(stdDevRightVec);
+	outputCorrelation = vecDiv(outputCorrelation, denominatorVec);
 
 	return outputCorrelation;
 }
 
-struct Vector getMaxCorrelation(struct Vector *dataSets, int m, int gMin, int gMax, int *gOpt) {
-	int gamma;
+struct Vector getMaxCorrelation(struct Vector *dataSets, int dataSetSize, int m, int gMin, int gMax, int *gOpt) {
+	int gamma = 0;
 	struct Vector highestCorrelation;
+	vecInit(&highestCorrelation);
 	int highestGamma = gMin;
-	for (gamma = gMin; gamma < gMax+1; ++gamma) {
-		struct Vector *correlation = getAutoCorrelation(dataSets, m, gamma);
-		highestCorrelation = getHighestCorrelation(highestCorrelation, *correlation);
-		if (vecEqual(highestCorrelation, *correlation)) {
+	for (gamma = gMin; gamma < gMax + 1; ++gamma) {
+		struct Vector correlation = getAutoCorrelation(dataSets, dataSetSize, m, gamma);
+		highestCorrelation = getHighestCorrelation(highestCorrelation, correlation);
+
+		if (vecEqual(highestCorrelation, correlation)) {
 			highestGamma = gamma;
 		}
 	}
 	*gOpt = highestGamma;
-	return highestCorrelation;
 
+	return highestCorrelation;
 }
 
-int getZeeStepCount(struct Vector *dataSets, int numLines) {
-	int gMax = 40;
-	int gMin = 100;
+int getZeeStepCount(struct Vector *dataSets, int numSamples) {
+	printf("=== Starting Zee step counting ===\n");
+	int gMin = 40;
+	int gMax = 100;
 	int gOpt = gMin;
 	enum STATE state = IDLE;
 	int numSteps = 0;
 	int i;
 	int numStepsCtr = 0;
-	for (i = 0; i < numLines; ++i) {
+	for (i = 0; i < numSamples; ++i) {
 		struct Vector highestCorrelation;
-		highestCorrelation = getMaxCorrelation(dataSets, i, gMin, gMax, &gOpt);
+		highestCorrelation = getMaxCorrelation(dataSets, numSamples, i, gMin, gMax, &gOpt);
+
 		if (vecMagnitude(dataSets[i]) < 0.01) {
 			state = IDLE;
 			numStepsCtr = 0;
 		} else if (vecMoreThanConst(highestCorrelation, 0.7)) {
 			state = WALKING;
+			#ifdef DEBUG
+			printf("*** STATE: WALKING ***\n");
+			printf("gOpt: %d\n", gOpt);
+			#endif
 		}
 
 		if (state == IDLE) {
 			continue;
 		}
 		if (numStepsCtr > gOpt / 2) {
-			numSteps+=1;
+			numSteps += 1;
 			numStepsCtr = 0;
+			#ifdef DEBUG
+			printf("Cur Num Steps: %d\n", numSteps);
+			#endif
 		}
 		numStepsCtr += 1;
 	}
@@ -279,7 +319,6 @@ int main(int argc, char *argv[]) {
 	struct Vector* dataSets;
 	int numLines = 0;
 	dataSets = getAccelData(argv[1], &numLines);
-	printDataSets(dataSets, numLines);
 #ifdef BRANDON
 	int numOfSteps = getZeeStepCount(dataSets, numLines);
 #else 
