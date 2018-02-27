@@ -4,6 +4,7 @@ import re
 file = raw_input("Enter file name: ")
 type = raw_input("Is the sensor tag fixed or in motion: (Answer F/M) ")
 string = open(file).read()
+numberOfSteps = raw_input("How many steps was this: ")
 
 def getNodeID():
     global string
@@ -20,6 +21,8 @@ def removeIntroduction():
     new_str = string[string.find("Time"):]
     newFile = "Without top.txt"
     open(newFile, 'w').write(new_str)
+#    with open(newFile, "a") as myfile:
+#        myfile.write("END")
     
     return newFile
 
@@ -49,15 +52,24 @@ def rejectLine(line):
         boolean = True
     return boolean
 
-nodeID = getNodeID()
-final = open(str(nodeID) + str(type.upper()) + '.csv', 'a')
+def convertToVelocity(gValue):
+    result = int(gValue) * 9.80665 / 100
+    return result
+
+def getTupleVelocity(x,y,z):
+    return convertToVelocity(x), convertToVelocity(y), convertToVelocity(z)
+
+#nodeID = getNodeID()
+final = open(str(numberOfSteps) + "_" + str(type.upper()) + '.csv', 'a')
 
 def main():
     with open(removeIntroduction()) as openfileobject:
         for line in openfileobject:
             if not rejectLine(line):
                 x,y,z = getValues(line)
-                final.write(str(x) + ', ' + str(y) + ',' + str(z))
+                convertedX, convertedY, convertedZ = getTupleVelocity(x,y,z)
+                
+                final.write(str(convertedX) + ', ' + str(convertedY) + ',' + str(convertedZ) + "\n")
     print("DONE")
 
 main()
