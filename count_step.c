@@ -74,16 +74,16 @@ int vecEqual(struct Vector left, struct Vector right) {
 }
 
 int vecMoreThanConst(struct Vector v, float f) {
-	if (v.x > f) {
-		return 1;
+	if (v.x <= f) {
+		return 0;
 	}
-	if (v.y > f) {
-		return 1;
+	if (v.y <= f) {
+		return 0;
 	}
-	if (v.z > f) {
-		return 1;
+	if (v.z <= f) {
+		return 0;
 	}
-	return 0;
+	return 1;
 }
 
 float vecMagnitude(struct Vector input) {
@@ -168,18 +168,42 @@ struct Vector getAccelStdDev(struct Vector *dataSets, int numSamples) {
 	return stdDevVec;
 }
 
+float getMean(float *dataSets, int numSamples) {
+	if (numSamples < 1) {
+		printf("There are no lines to compute for the mean\n");
+		exit(EXIT_FAILURE);
+	}	
+	int i;
+	float output;
+	for(i = 0; i < numSamples; ++i) {
+		output += dataSets[i];
+	}
+	return output / numSamples;	
+}
+
+float getStdDev(float *dataSets, int numSamples) {
+	#ifdef DEBUG
+	if (numSamples == 0) {
+		printf("getStdDev num samples == 0\n");
+	}
+	#endif
+	float mean = getMean(dataSets, numSamples);
+	float stdDev;
+	int i;
+	for(i = 0; i < numSamples; ++i) {
+		stdDev += pow(dataSets[i] - mean, 2);
+	}
+
+	stdDev = sqrt(stdDev / numSamples);
+
+	return stdDev;
+}
+
 /*
 	Gets the mean value of samples between fromIdx to the window size
 */
 struct Vector getAccelMeanFromTill(struct Vector *dataSets, int dataSetSize, int fromIdx, int windowSize) {
 	int k;
-	if (fromIdx + windowSize >= dataSetSize) {
-		windowSize = (fromIdx + windowSize) - dataSetSize + 1;
-		#ifdef DEBUG
-		printf("*** getAccelMeanFromTill ***\n");
-		printf("Window Size: %d fromIdx: %d\n", windowSize, fromIdx); 
-		#endif		
-	}
 	struct Vector *newSampleDataSet = (struct Vector *) malloc(sizeof(struct Vector) * windowSize);
 	struct Vector outputMeanVec;
 	for (k = 0; k < windowSize; ++k) {
@@ -197,13 +221,6 @@ struct Vector getAccelMeanFromTill(struct Vector *dataSets, int dataSetSize, int
 
 struct Vector getAccelStdDevFromTill(struct Vector *dataSets, int dataSetSize, int fromIdx, int windowSize) {
 	int k;
-	if (fromIdx + windowSize >= dataSetSize) {
-		windowSize = (fromIdx + windowSize) - dataSetSize + 1;
-		#ifdef DEBUG
-		printf("*** getAccelStdDevFromTill ***\n");
-		printf("Window Size: %d fromIdx: %d\n", windowSize, fromIdx); 
-		#endif
-	}
 	struct Vector *newSampleDataSet = (struct Vector *) malloc(sizeof(struct Vector) * windowSize);
 	struct Vector outputStdDevVec;
 	for (k = 0; k < windowSize; ++k) {
@@ -217,6 +234,21 @@ struct Vector getAccelStdDevFromTill(struct Vector *dataSets, int dataSetSize, i
 	free(newSampleDataSet);
 
 	return outputStdDevVec;
+}
+
+float getAccelStdDevOfMag(struct Vector *dataSets, int dataSetSize, int fromIdx, int windowSize) {
+	int k;
+	float output;
+	float *newSampleMagnitude = (float *) malloc(sizeof(float) * windowSize);
+
+	for (k = 0; k < windowSize; ++k) {
+		int targetIdx = fromIdx + k;
+		newSampleMagnitude[k] = vecMagnitude(dataSets[targetIdx]);
+	}
+	float stdDev = getStdDev(newSampleMagnitude, windowSize);
+	free(newSampleMagnitude);
+
+	return output;
 }
 
 struct Vector getAutoCorrelation(struct Vector *dataSets, int dataSetSize, int m, int gamma) {
@@ -259,15 +291,15 @@ struct Vector getMaxCorrelation(struct Vector *dataSets, int dataSetSize, int m,
 	vecInit(&highestCorrelation);
 	int highestGamma = gMin;
 	for (gamma = gMin; gamma < gMax + 1; ++gamma) {
+		if (m + gamma + gamma >= dataSetSize) {
+			break;
+		}
 		struct Vector correlation = getAutoCorrelation(dataSets, dataSetSize, m, gamma);
 		highestCorrelation = getHighestCorrelation(highestCorrelation, correlation);
 		if (vecEqual(highestCorrelation, correlation)) {
 			highestGamma = gamma;
 		}	
 	}
-	#ifdef DEBUG
-		printf("\n*** highestGamma: %d ***\n", highestGamma);
-	#endif
 	*gOpt = highestGamma;
 	return highestCorrelation;
 }
@@ -284,8 +316,7 @@ int getZeeStepCount(struct Vector *dataSets, int numSamples) {
 	for (i = 0; i < numSamples; ++i) {
 		struct Vector highestCorrelation;
 		highestCorrelation = getMaxCorrelation(dataSets, numSamples, i, gMin, gMax, &gOpt);
-
-		if (vecMagnitude(dataSets[i]) < 0.1) {
+		if (getAccelStdDevOfMag(dataSets, numSamples, i, gOpt) < 0.02) {
 			state = IDLE;
 			numStepsCtr = 0;
 			#ifdef DEBUG
@@ -302,16 +333,13 @@ int getZeeStepCount(struct Vector *dataSets, int numSamples) {
 			continue;
 		}
 
-		#ifdef DEBUG
-		printf("gOpt: %d\n", gOpt);
-		#endif
-
 		if (numStepsCtr > gOpt / 2) {
 			numSteps += 1;
 			numStepsCtr = 0;
 			#ifdef DEBUG
-			printf("Cur Num Steps: %d\n", numSteps);
+			printf("*** Cur Num Steps: %d ***\n", numSteps);
 			#endif
+			continue;
 		}
 		numStepsCtr += 1;
 	}
