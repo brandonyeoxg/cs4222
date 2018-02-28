@@ -21,12 +21,14 @@ struct Vector* getAccelData(char *filename, int *numLines);
 void printDataSets(struct Vector *dataSets, int numLines);
 float getMeanOfSamplesInWindow(struct Vector *dataSets, int numLines, int start, int end);
 float getVarianceOfSamplesInWindow(struct Vector *dataSets, int numLines, int windowRange, int start, int end);
+float *getVarianceArray(struct Vector *dataSets, int numLines, int windowRange);
 
 /*== To be implemented! ==*/
 int getDeadReckoningStepCount(struct Vector *dataSets, int numLines) {
 	printf("===Printing from Dead Reckoning===\n");
 	printDataSets(dataSets, numLines);
 	int windowRange = 15;
+	float *varianceArray = getVarianceArray(dataSets, numLines, windowRange);
 	return 0;
 }
 
@@ -128,6 +130,15 @@ float getVarianceOfSamplesInWindow(struct Vector *dataSets, int numLines, int wi
 	}
 	float varianceOfSamplesInWindow = diffAccumulatedSoFar / (2 * windowRange + 1);
 	return varianceOfSamplesInWindow;
+}
+
+float *getVarianceArray(struct Vector *dataSets, int numLines, int windowRange) {
+	int i;
+	float *arrayOfVariances = malloc(sizeof(float) * (numLines - (2 * windowRange))); // array index is 0, but actually is index 0 + windowRAnge
+	for (i = 0; i < numLines - (2 * windowRange); i++) {
+		arrayOfVariances[i] = getVarianceOfSamplesInWindow(dataSets, numLines, windowRange, i, i + windowRange);
+	}
+	return arrayOfVariances;
 }
 
 /*
