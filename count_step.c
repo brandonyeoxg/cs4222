@@ -30,11 +30,7 @@ int getDeadReckoningStepCount(struct Vector *dataSets, int numLines) {
 	int windowRange = 15;
 	float *varianceArray = getVarianceArray(dataSets, numLines, windowRange);
 	int i;
-	// // print some values of the array
-	// for (i = 100; i < 110; i++) {
-	// 	float standardDeviation = sqrt(varianceArray[i]);
-	// 	printf("%f\n", standardDeviation);	
-	// }
+	
 	free(varianceArray);
 	return 0;
 }
@@ -116,7 +112,7 @@ struct Vector *getAccelData(char *filename, int *lines) {
 
 float getMeanOfSamplesInWindow(struct Vector *dataSets, int numLines, int windowRange, int start, int end) {
 	int i;
-	float magAccumulatedSoFar;
+	float magAccumulatedSoFar = 0;
 	for (i = start; i <= end; i++) {
 		float currentVecMag = getVecMag(dataSets[i]);
 		magAccumulatedSoFar += currentVecMag;
@@ -127,7 +123,7 @@ float getMeanOfSamplesInWindow(struct Vector *dataSets, int numLines, int window
 
 float getVarianceOfSamplesInWindow(struct Vector *dataSets, int numLines, int windowRange, int start, int end) {
 	int i;
-	float diffAccumulatedSoFar; // (aj - aj_bar)^2
+	float diffAccumulatedSoFar = 0; // (aj - aj_bar)^2
 	for (i = start; i <= end; i++) {
 		float currentVecMag = getVecMag(dataSets[i]);
 		float meanOfCurrentSampleIndex = getMeanOfSamplesInWindow(dataSets, numLines, windowRange, i, i + 2 * windowRange);
@@ -135,8 +131,7 @@ float getVarianceOfSamplesInWindow(struct Vector *dataSets, int numLines, int wi
 		float diffSquared = pow(diffBetweenMagMean, 2);
 		diffAccumulatedSoFar += diffSquared;
 	}
-	float varianceOfSamplesInWindow = diffAccumulatedSoFar / (2 * windowRange + 1);
-	return varianceOfSamplesInWindow;
+	return diffAccumulatedSoFar / (2 * windowRange + 1);
 }
 
 float *getVarianceArray(struct Vector *dataSets, int numLines, int windowRange) {
@@ -144,7 +139,6 @@ float *getVarianceArray(struct Vector *dataSets, int numLines, int windowRange) 
 	float *arrayOfVariances = malloc(sizeof(float) * (numLines - (2 * windowRange))); // array index is 0, but actually is index 0 + windowRAnge
 	for (i = 0; i < numLines - (2 * windowRange); i++) {
 		arrayOfVariances[i] = getVarianceOfSamplesInWindow(dataSets, numLines, windowRange, i, i + 2 * windowRange);
-		printf("%f\n", arrayOfVariances[i]);
 	}
 	return arrayOfVariances;
 }
