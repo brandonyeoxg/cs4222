@@ -19,18 +19,14 @@ int getCSVLineCount(FILE *file);
 void getAccelInfo(FILE *file, struct Vector *dataSets, int numLines);
 struct Vector* getAccelData(char *filename, int *numLines);
 void printDataSets(struct Vector *dataSets, int numLines);
-float getMeanOfSamplesInWindow(struct Vector *dataSets, int numLines, int windowRange);
-float getVarianceOfSamplesInWindow(struct Vector *dataSets, int numLines, int windowRange, float meanOfSamples);
+float getMeanOfSamplesInWindow(struct Vector *dataSets, int numLines, int start, int end);
+float getVarianceOfSamplesInWindow(struct Vector *dataSets, int numLines, int windowRange, int start, int end);
 
 /*== To be implemented! ==*/
 int getDeadReckoningStepCount(struct Vector *dataSets, int numLines) {
 	printf("===Printing from Dead Reckoning===\n");
 	printDataSets(dataSets, numLines);
 	int windowRange = 15;
-	float meanOfSamplesInWindow = getMeanOfSamplesInWindow(dataSets, numLines, windowRange);
-	printf("Mean is: %f\n", meanOfSamplesInWindow);
-	float varianceOfSamplesInWindow = getVarianceOfSamplesInWindow(dataSets, numLines, windowRange, meanOfSamplesInWindow);
-	printf("Variance is: %f\n", varianceOfSamplesInWindow);
 	return 0;
 }
 
@@ -109,23 +105,24 @@ struct Vector *getAccelData(char *filename, int *lines) {
 	return dataSets;
 }
 
-float getMeanOfSamplesInWindow(struct Vector *dataSets, int numLines, int windowRange) {
+float getMeanOfSamplesInWindow(struct Vector *dataSets, int numLines, int start, int end) {
 	int i;
 	float magAccumulatedSoFar;
-	for (i = 0 + windowRange; i < numLines - windowRange; i++) {
+	for (i = start; i <= end; i++) {
 		float currentVecMag = getVecMag(dataSets[i]);
 		magAccumulatedSoFar += currentVecMag;
 	}
-	float meanOfSamples = magAccumulatedSoFar / numLines - (2 * windowRange);
+	float meanOfSamples = magAccumulatedSoFar / (end - start + 1);
 	return meanOfSamples;
 }
 
-float getVarianceOfSamplesInWindow(struct Vector *dataSets, int numLines, int windowRange, float meanOfSamples) {
+float getVarianceOfSamplesInWindow(struct Vector *dataSets, int numLines, int windowRange, int start, int end) {
 	int i;
 	float diffAccumulatedSoFar; // (aj - aj_bar)^2
-	for (i = 0 + windowRange; i < numLines - windowRange; i++) {
+	for (i = start; i <= end; i++) {
 		float currentVecMag = getVecMag(dataSets[i]);
-		float diffBetweenMagMean = currentVecMag - meanOfSamples;
+		float meanOfCurrentSampleIndex = getMeanOfSamplesInWindow(dataSets, numLines, 0, i);
+		float diffBetweenMagMean = currentVecMag - meanOfCurrentSampleIndex;
 		float diffSquared = pow(diffBetweenMagMean, 2);
 		diffAccumulatedSoFar += diffSquared;
 	}
