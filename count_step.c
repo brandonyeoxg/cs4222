@@ -30,11 +30,11 @@ int getDeadReckoningStepCount(struct Vector *dataSets, int numLines) {
 	int windowRange = 15;
 	float *varianceArray = getVarianceArray(dataSets, numLines, windowRange);
 	int i;
-	// print some values of the array
-	for (i = 100; i < 110; i++) {
-		float standardDeviation = sqrt(varianceArray[i]);
-		printf("%f\n", standardDeviation);	
-	}
+	// // print some values of the array
+	// for (i = 100; i < 110; i++) {
+	// 	float standardDeviation = sqrt(varianceArray[i]);
+	// 	printf("%f\n", standardDeviation);	
+	// }
 	free(varianceArray);
 	return 0;
 }
@@ -144,6 +144,7 @@ float *getVarianceArray(struct Vector *dataSets, int numLines, int windowRange) 
 	float *arrayOfVariances = malloc(sizeof(float) * (numLines - (2 * windowRange))); // array index is 0, but actually is index 0 + windowRAnge
 	for (i = 0; i < numLines - (2 * windowRange); i++) {
 		arrayOfVariances[i] = getVarianceOfSamplesInWindow(dataSets, numLines, windowRange, i, i + 2 * windowRange);
+		printf("%f\n", arrayOfVariances[i]);
 	}
 	return arrayOfVariances;
 }
