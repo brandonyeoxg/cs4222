@@ -22,6 +22,7 @@ void printDataSets(struct Vector *dataSets, int numLines);
 float getMeanOfSamplesInWindow(struct Vector *dataSets, int numLines, int windowRange, int start, int end);
 float getVarianceOfSamplesInWindow(struct Vector *dataSets, int numLines, int windowRange, int start, int end);
 float *getStandardDevArray(struct Vector *dataSets, int numLines, int windowRange);
+int getNumOfSteps(float *standardDevArray, int numLines, int windowRange, float threshold);
 
 /*== To be implemented! ==*/
 int getDeadReckoningStepCount(struct Vector *dataSets, int numLines) {
@@ -29,9 +30,12 @@ int getDeadReckoningStepCount(struct Vector *dataSets, int numLines) {
 	printDataSets(dataSets, numLines);
 	int windowRange = 15;
 	float *varianceArray = getStandardDevArray(dataSets, numLines, windowRange);
-	int i;
+	float threshold = 2.0;
+	int totalSteps = getNumOfSteps(varianceArray, numLines, windowRange, threshold);
+	printf("Number of Steps: %d\n", totalSteps);
 
 	free(varianceArray);
+	return totalSteps;
 	return 0;
 }
 
@@ -141,6 +145,26 @@ float *getStandardDevArray(struct Vector *dataSets, int numLines, int windowRang
 		arrayOfStandardDev[i] = sqrt(getVarianceOfSamplesInWindow(dataSets, numLines, windowRange, i, i + 2 * windowRange));
 	}
 	return arrayOfStandardDev;
+}
+
+int getNumOfSteps(float *standardDevArray, int numLines, int windowRange, float threshold) {
+	int numOfSteps = 0;
+	int state = 0; //0 for idle, 1 for movement
+	int i;
+	int temp = state;
+	for (i = 0; i < numLines - (2 * windowRange); i++) {
+		temp = state;
+		if (standardDevArray[i] > threshold) {
+			state = 1;
+		}
+		if (standardDevArray[i] < threshold) {
+			if (temp == 1) {
+				numOfSteps += 1;
+			}
+			state = 0;
+		}
+	}
+	return numOfSteps;
 }
 
 /*
