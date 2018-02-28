@@ -24,6 +24,9 @@ void printDataSets(struct Vector *dataSets, int numLines);
 int getDeadReckoningStepCount(struct Vector *dataSets, int numLines) {
 	printf("===Printing from Dead Reckoning===\n");
 	printDataSets(dataSets, numLines);
+	int windowRange = 15;
+	meanOfSamplesInWindow = getMeanOfSamplesInWindow(dataSets, numLines, windowRange);
+	printf(meanOfSamplesInWindow);
 	return 0;
 }
 
@@ -100,6 +103,18 @@ struct Vector *getAccelData(char *filename, int *lines) {
 
 	fclose(file);
 	return dataSets;
+}
+
+float getMeanOfSamplesInWindow(struct Vector *dataSets, int numLines, int windowRange) {
+	int i;
+	float magAccumulatedSoFar;
+	for (i = 0 + windowRange; i < numLines - windowRange; i++) {
+		float currentVecMag = getVecMag(dataSets[i])
+		magAccumulatedSoFar += currentVecMag;
+	}
+	meanOfSamples = magAccumulatedSoFar / numLines - (2 * windowRange);
+	return meanOfSamples;
+
 }
 
 /*
