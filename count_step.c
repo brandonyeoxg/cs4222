@@ -21,16 +21,16 @@ struct Vector* getAccelData(char *filename, int *numLines);
 void printDataSets(struct Vector *dataSets, int numLines);
 float getMeanOfSamplesInWindow(struct Vector *dataSets, int numLines, int windowRange, int start, int end);
 float getVarianceOfSamplesInWindow(struct Vector *dataSets, int numLines, int windowRange, int start, int end);
-float *getVarianceArray(struct Vector *dataSets, int numLines, int windowRange);
+float *getStandardDevArray(struct Vector *dataSets, int numLines, int windowRange);
 
 /*== To be implemented! ==*/
 int getDeadReckoningStepCount(struct Vector *dataSets, int numLines) {
 	printf("===Printing from Dead Reckoning===\n");
 	printDataSets(dataSets, numLines);
 	int windowRange = 15;
-	float *varianceArray = getVarianceArray(dataSets, numLines, windowRange);
+	float *varianceArray = getStandardDevArray(dataSets, numLines, windowRange);
 	int i;
-	
+
 	free(varianceArray);
 	return 0;
 }
@@ -134,13 +134,13 @@ float getVarianceOfSamplesInWindow(struct Vector *dataSets, int numLines, int wi
 	return diffAccumulatedSoFar / (2 * windowRange + 1);
 }
 
-float *getVarianceArray(struct Vector *dataSets, int numLines, int windowRange) {
+float *getStandardDevArray(struct Vector *dataSets, int numLines, int windowRange) {
 	int i;
-	float *arrayOfVariances = malloc(sizeof(float) * (numLines - (2 * windowRange))); // array index is 0, but actually is index 0 + windowRAnge
+	float *arrayOfStandardDev = malloc(sizeof(float) * (numLines - (2 * windowRange))); // array index is 0, but actually is index 0 + windowRAnge
 	for (i = 0; i < numLines - (2 * windowRange); i++) {
-		arrayOfVariances[i] = getVarianceOfSamplesInWindow(dataSets, numLines, windowRange, i, i + 2 * windowRange);
+		arrayOfStandardDev[i] = sqrt(getVarianceOfSamplesInWindow(dataSets, numLines, windowRange, i, i + 2 * windowRange));
 	}
-	return arrayOfVariances;
+	return arrayOfStandardDev;
 }
 
 /*
@@ -152,4 +152,3 @@ void printDataSets(struct Vector *dataSets, int numLines) {
 	for (i = 0; i < numLines; i++ ) {
 		printf("Data %i: X=%.2f, Y=%.2f, Z=%.2f\n", i + 1, dataSets[i].x, dataSets[i].y, dataSets[i].z);
 	}
-}
