@@ -32,7 +32,7 @@ int getDeadReckoningStepCount(struct Vector *dataSets, int numLines) {
 	int i;
 	// print some values of the array
 	for (i = 100; i < 110; i++) {
-		float standardDeviation = (varianceArray[i]);
+		float standardDeviation = sqrt(varianceArray[i]);
 		printf("%f\n", standardDeviation);	
 	}
 	free(varianceArray);
