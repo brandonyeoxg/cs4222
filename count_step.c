@@ -19,7 +19,7 @@ int getCSVLineCount(FILE *file);
 void getAccelInfo(FILE *file, struct Vector *dataSets, int numLines);
 struct Vector* getAccelData(char *filename, int *numLines);
 void printDataSets(struct Vector *dataSets, int numLines);
-float getMeanOfSamplesInWindow(struct Vector *dataSets, int numLines, int start, int end);
+float getMeanOfSamplesInWindow(struct Vector *dataSets, int numLines, int windowRange, int start, int end);
 float getVarianceOfSamplesInWindow(struct Vector *dataSets, int numLines, int windowRange, int start, int end);
 float *getVarianceArray(struct Vector *dataSets, int numLines, int windowRange);
 
@@ -29,6 +29,13 @@ int getDeadReckoningStepCount(struct Vector *dataSets, int numLines) {
 	printDataSets(dataSets, numLines);
 	int windowRange = 15;
 	float *varianceArray = getVarianceArray(dataSets, numLines, windowRange);
+	int i;
+	// print some values of the array
+	for (i = 100; i < 110; i++) {
+		float standardDeviation = (varianceArray[i]);
+		printf("%f\n", standardDeviation);	
+	}
+	free(varianceArray);
 	return 0;
 }
 
@@ -107,14 +114,14 @@ struct Vector *getAccelData(char *filename, int *lines) {
 	return dataSets;
 }
 
-float getMeanOfSamplesInWindow(struct Vector *dataSets, int numLines, int start, int end) {
+float getMeanOfSamplesInWindow(struct Vector *dataSets, int numLines, int windowRange, int start, int end) {
 	int i;
 	float magAccumulatedSoFar;
 	for (i = start; i <= end; i++) {
 		float currentVecMag = getVecMag(dataSets[i]);
 		magAccumulatedSoFar += currentVecMag;
 	}
-	float meanOfSamples = magAccumulatedSoFar / (end - start + 1);
+	float meanOfSamples = magAccumulatedSoFar / (2 * windowRange + 1);
 	return meanOfSamples;
 }
 
@@ -123,7 +130,7 @@ float getVarianceOfSamplesInWindow(struct Vector *dataSets, int numLines, int wi
 	float diffAccumulatedSoFar; // (aj - aj_bar)^2
 	for (i = start; i <= end; i++) {
 		float currentVecMag = getVecMag(dataSets[i]);
-		float meanOfCurrentSampleIndex = getMeanOfSamplesInWindow(dataSets, numLines, 0, i);
+		float meanOfCurrentSampleIndex = getMeanOfSamplesInWindow(dataSets, numLines, windowRange, i, i + 2 * windowRange);
 		float diffBetweenMagMean = currentVecMag - meanOfCurrentSampleIndex;
 		float diffSquared = pow(diffBetweenMagMean, 2);
 		diffAccumulatedSoFar += diffSquared;
@@ -136,7 +143,7 @@ float *getVarianceArray(struct Vector *dataSets, int numLines, int windowRange) 
 	int i;
 	float *arrayOfVariances = malloc(sizeof(float) * (numLines - (2 * windowRange))); // array index is 0, but actually is index 0 + windowRAnge
 	for (i = 0; i < numLines - (2 * windowRange); i++) {
-		arrayOfVariances[i] = getVarianceOfSamplesInWindow(dataSets, numLines, windowRange, i, i + windowRange);
+		arrayOfVariances[i] = getVarianceOfSamplesInWindow(dataSets, numLines, windowRange, i, i + 2 * windowRange);
 	}
 	return arrayOfVariances;
 }
