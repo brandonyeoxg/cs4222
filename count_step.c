@@ -19,14 +19,15 @@ int getCSVLineCount(FILE *file);
 void getAccelInfo(FILE *file, struct Vector *dataSets, int numLines);
 struct Vector* getAccelData(char *filename, int *numLines);
 void printDataSets(struct Vector *dataSets, int numLines);
+float getMeanOfSamplesInWindow(struct Vector *dataSets, int numLines, int windowRange);
 
 /*== To be implemented! ==*/
 int getDeadReckoningStepCount(struct Vector *dataSets, int numLines) {
 	printf("===Printing from Dead Reckoning===\n");
 	printDataSets(dataSets, numLines);
 	int windowRange = 15;
-	meanOfSamplesInWindow = getMeanOfSamplesInWindow(dataSets, numLines, windowRange);
-	printf(meanOfSamplesInWindow);
+	float meanOfSamplesInWindow = getMeanOfSamplesInWindow(dataSets, numLines, windowRange);
+	printf("Mean is: %f\n", meanOfSamplesInWindow);
 	return 0;
 }
 
@@ -109,10 +110,10 @@ float getMeanOfSamplesInWindow(struct Vector *dataSets, int numLines, int window
 	int i;
 	float magAccumulatedSoFar;
 	for (i = 0 + windowRange; i < numLines - windowRange; i++) {
-		float currentVecMag = getVecMag(dataSets[i])
+		float currentVecMag = getVecMag(dataSets[i]);
 		magAccumulatedSoFar += currentVecMag;
 	}
-	meanOfSamples = magAccumulatedSoFar / numLines - (2 * windowRange);
+	float meanOfSamples = magAccumulatedSoFar / numLines - (2 * windowRange);
 	return meanOfSamples;
 
 }
