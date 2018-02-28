@@ -126,7 +126,7 @@ float getVarianceOfSamplesInWindow(struct Vector *dataSets, int numLines, int wi
 	for (i = 0 + windowRange; i < numLines - windowRange; i++) {
 		float currentVecMag = getVecMag(dataSets[i]);
 		float diffBetweenMagMean = currentVecMag - meanOfSamples;
-		float diffSquared = diffBetweenMagMean * diffBetweenMagMean;
+		float diffSquared = pow(diffBetweenMagMean, 2);
 		diffAccumulatedSoFar += diffSquared;
 	}
 	float varianceOfSamplesInWindow = diffAccumulatedSoFar / (2 * windowRange + 1);
