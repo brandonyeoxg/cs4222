@@ -20,6 +20,7 @@ void getAccelInfo(FILE *file, struct Vector *dataSets, int numLines);
 struct Vector* getAccelData(char *filename, int *numLines);
 void printDataSets(struct Vector *dataSets, int numLines);
 float getMeanOfSamplesInWindow(struct Vector *dataSets, int numLines, int windowRange);
+float getVarianceOfSamplesInWindow(struct Vector *dataSets, int numLines, int windowRange, float meanOfSamples);
 
 /*== To be implemented! ==*/
 int getDeadReckoningStepCount(struct Vector *dataSets, int numLines) {
@@ -28,6 +29,8 @@ int getDeadReckoningStepCount(struct Vector *dataSets, int numLines) {
 	int windowRange = 15;
 	float meanOfSamplesInWindow = getMeanOfSamplesInWindow(dataSets, numLines, windowRange);
 	printf("Mean is: %f\n", meanOfSamplesInWindow);
+	float varianceOfSamplesInWindow = getVarianceOfSamplesInWindow(dataSets, numLines, windowRange, meanOfSamplesInWindow);
+	printf("Variance is: %f\n", varianceOfSamplesInWindow);
 	return 0;
 }
 
@@ -115,7 +118,19 @@ float getMeanOfSamplesInWindow(struct Vector *dataSets, int numLines, int window
 	}
 	float meanOfSamples = magAccumulatedSoFar / numLines - (2 * windowRange);
 	return meanOfSamples;
+}
 
+float getVarianceOfSamplesInWindow(struct Vector *dataSets, int numLines, int windowRange, float meanOfSamples) {
+	int i;
+	float diffAccumulatedSoFar; // (aj - aj_bar)^2
+	for (i = 0 + windowRange; i < numLines - windowRange; i++) {
+		float currentVecMag = getVecMag(dataSets[i]);
+		float diffBetweenMagMean = currentVecMag - meanOfSamples;
+		float diffSquared = diffBetweenMagMean * diffBetweenMagMean;
+		diffAccumulatedSoFar += diffSquared;
+	}
+	float varianceOfSamplesInWindow = diffAccumulatedSoFar / (2 * windowRange + 1);
+	return varianceOfSamplesInWindow;
 }
 
 /*
