@@ -19,12 +19,24 @@ int getCSVLineCount(FILE *file);
 void getAccelInfo(FILE *file, struct Vector *dataSets, int numLines);
 struct Vector* getAccelData(char *filename, int *numLines);
 void printDataSets(struct Vector *dataSets, int numLines);
+float getMeanOfSamplesInWindow(struct Vector *dataSets, int numLines, int windowRange, int start, int end);
+float getVarianceOfSamplesInWindow(struct Vector *dataSets, int numLines, int windowRange, int start, int end);
+float *getStandardDevArray(struct Vector *dataSets, int numLines, int windowRange);
+int getNumOfSteps(float *standardDevArray, int numLines, int windowRange, float thresholdReady, float thresholdRecord);
 
 /*== To be implemented! ==*/
 int getDeadReckoningStepCount(struct Vector *dataSets, int numLines) {
-	printf("===Printing from Dead Reckoning===\n");
-	printDataSets(dataSets, numLines);
-	return 0;
+    printf("===Printing from Dead Reckoning===\n");
+    int windowRange = 15;
+    float *varianceArray = getStandardDevArray(dataSets, numLines, windowRange);
+    float thresholdReady = 1.45;
+    float thresholdRecord = 1.4;
+    int totalSteps = getNumOfSteps(varianceArray, numLines, windowRange, thresholdReady, thresholdRecord);
+    printf("Number of Steps: %d\n", totalSteps);
+    
+    free(varianceArray);
+    return totalSteps;
+    return 0;
 }
 
 int main(int argc, char *argv[]) {
@@ -102,6 +114,57 @@ struct Vector *getAccelData(char *filename, int *lines) {
 	return dataSets;
 }
 
+float getMeanOfSamplesInWindow(struct Vector *dataSets, int numLines, int windowRange, int start, int end) {
+    int i;
+    float magAccumulatedSoFar = 0;
+    for (i = start; i <= end; i++) {
+        float currentVecMag = getVecMag(dataSets[i]);
+        magAccumulatedSoFar += currentVecMag;
+    }
+    float meanOfSamples = magAccumulatedSoFar / (2 * windowRange + 1);
+    return meanOfSamples;
+}
+
+float getVarianceOfSamplesInWindow(struct Vector *dataSets, int numLines, int windowRange, int start, int end) {
+    int i;
+    float diffAccumulatedSoFar = 0; // (aj - aj_bar)^2
+    for (i = start; i <= end; i++) {
+        float currentVecMag = getVecMag(dataSets[i]);
+        float meanOfCurrentSampleIndex = getMeanOfSamplesInWindow(dataSets, numLines, windowRange, i, i + 2 * windowRange);
+        float diffBetweenMagMean = currentVecMag - meanOfCurrentSampleIndex;
+        float diffSquared = pow(diffBetweenMagMean, 2);
+        diffAccumulatedSoFar += diffSquared;
+    }
+    return diffAccumulatedSoFar / (2 * windowRange + 1);
+}
+
+float *getStandardDevArray(struct Vector *dataSets, int numLines, int windowRange) {
+    int i;
+    float *arrayOfStandardDev = malloc(sizeof(float) * (numLines - (2 * windowRange))); // array index is 0, but actually is index 0 + windowRAnge
+    for (i = 0; i < numLines - (2 * windowRange); i++) {
+        arrayOfStandardDev[i] = sqrt(getVarianceOfSamplesInWindow(dataSets, numLines, windowRange, i, i + 2 * windowRange));
+    }
+    return arrayOfStandardDev;
+}
+
+int getNumOfSteps(float *standardDevArray, int numLines, int windowRange, float thresholdReady, float thresholdRecord) {
+    int numOfSteps = 0;
+    int state = 0; //0 for idle, 1 for ready mode
+    int i;
+    int temp = state;
+    for (i = 0; i < numLines - (2 * windowRange); i++) {
+        temp = state;
+        if (standardDevArray[i] > thresholdReady) {
+            state = 1;
+        } else if (standardDevArray[i] < thresholdRecord) {
+            if (temp == 1) { // originally in ready mode
+                numOfSteps += 1;
+            }
+            state = 0; // Reset state to be back to idle
+        }
+    }
+    return numOfSteps;
+}
 /*
 	Prints the entire data set, used as a debug func.
 */
