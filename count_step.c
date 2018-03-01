@@ -116,7 +116,7 @@ struct Vector getAccelMean(struct Vector *dataSets, int numLines) {
 		exit(EXIT_FAILURE);
 	}
 	int i;
-	float x ,y,z;
+	float x = 0.0 ,y = 0.0 ,z = 0.0;
 	x = y = z = 0.0;
 	for(i = 0; i < numLines; ++i) {
 		x += dataSets[i].x;
@@ -125,7 +125,8 @@ struct Vector getAccelMean(struct Vector *dataSets, int numLines) {
 	}
 
 	struct Vector outputVec;
-
+	vecInit(&outputVec);
+	
 	outputVec.x = x / numLines;
 	outputVec.y = y / numLines;
 	outputVec.z = z / numLines;
@@ -141,6 +142,7 @@ struct Vector getAccelStdDev(struct Vector *dataSets, int numSamples) {
 	#endif
 	struct Vector meanVec = getAccelMean(dataSets, numSamples);
 	struct Vector stdDevVec;
+	vecInit(stdDevVec);
 	int i;
 	for(i = 0; i < numSamples; ++i) {
 		stdDevVec.x += pow(dataSets[i].x - meanVec.x, 2);
@@ -161,7 +163,7 @@ float getMean(float *dataSets, int numSamples) {
 		exit(EXIT_FAILURE);
 	}	
 	int i;
-	float output;
+	float output = 0;
 	for(i = 0; i < numSamples; ++i) {
 		output += dataSets[i];
 	}
@@ -175,7 +177,7 @@ float getStdDev(float *dataSets, int numSamples) {
 	}
 	#endif
 	float mean = getMean(dataSets, numSamples);
-	float stdDev;
+	float stdDev = 0.0f;
 	int i;
 	for(i = 0; i < numSamples; ++i) {
 		stdDev += pow(dataSets[i] - mean, 2);
@@ -298,10 +300,10 @@ struct Vector getMaxCorrelation(struct Vector *dataSets, int dataSetSize, int m,
 
 int getZeeStepCount(struct Vector *dataSets, int numSamples) {
 	printf("=== Starting Zee step counting ===\n");
-	int gMin = 130;
-	int gMax = 180;
+	int gMin = 120;
+	int gMax = 200;
 	int gOpt = 0;
-	int gAbsMin = 120, gAbsMax = 200;
+	int gAbsMin = 120, gAbsMax = 240;
 	enum STATE state = IDLE;
 	int numSteps = 0;
 	int i;
@@ -318,22 +320,25 @@ int getZeeStepCount(struct Vector *dataSets, int numSamples) {
 		if (getAccelStdDevOfMag(dataSets, numSamples, i, gOpt) < 0.01) {
 			state = IDLE;
 			numStepsCtr = 0;
-			#ifdef DEBUG
+			#ifdef DEBUG1
 			printf("*** STATE: IDLE @ gamma %d, gMax = %d, gMin = %d ***\n", gOpt, gMax, gMin);
 			#endif
 		} else if (vecMoreThanConst(highestCorrelation, 0.7)) {
 			state = WALKING;
 			#ifdef DEBUG
-			printf("*** STATE: WALKING @ sample: %d/%d gamma %d ***\n", i, numSamples, gOpt);
+			printf("*** STATE: WALKING @ sample: %d/%d gamma %d, gMax = %d, gMin = %d ***\n", i, numSamples, gOpt, gMax, gMin);
 			#endif
 			gMin = gOpt - 40;
 			if (gMin < gAbsMin) {
 				gMin = gAbsMin;
-			} 
-			gMax = gOpt + 40;
-			if (gMax > gAbsMax) {
-				gMax = gAbsMax;
-			}						
+				gMax = gMin + 80;
+			} else {
+				gMax = gOpt + 40;
+				if (gMax > gAbsMax) {
+					gMax = gAbsMax;
+					gMin = gMax - 80;
+				}
+			}
 		}
 
 		if (state == IDLE) {
