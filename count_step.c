@@ -4,7 +4,6 @@
 #include <math.h>
 
 #define MAX_BUF 255
-#define DEBUG
 
 enum STATE {IDLE = 0, WALKING = 1};
 
@@ -126,7 +125,7 @@ struct Vector getAccelMean(struct Vector *dataSets, int numLines) {
 
 	struct Vector outputVec;
 	vecInit(&outputVec);
-	
+
 	outputVec.x = x / numLines;
 	outputVec.y = y / numLines;
 	outputVec.z = z / numLines;
@@ -135,14 +134,9 @@ struct Vector getAccelMean(struct Vector *dataSets, int numLines) {
 }
 
 struct Vector getAccelStdDev(struct Vector *dataSets, int numSamples) {
-	#ifdef DEBUG
-	if (numSamples == 0) {
-		printf("getAccelStdDev num samples == 0\n");
-	}
-	#endif
 	struct Vector meanVec = getAccelMean(dataSets, numSamples);
 	struct Vector stdDevVec;
-	vecInit(stdDevVec);
+	vecInit(&stdDevVec);
 	int i;
 	for(i = 0; i < numSamples; ++i) {
 		stdDevVec.x += pow(dataSets[i].x - meanVec.x, 2);
@@ -171,11 +165,6 @@ float getMean(float *dataSets, int numSamples) {
 }
 
 float getStdDev(float *dataSets, int numSamples) {
-	#ifdef DEBUG
-	if (numSamples == 0) {
-		printf("getStdDev num samples == 0\n");
-	}
-	#endif
 	float mean = getMean(dataSets, numSamples);
 	float stdDev = 0.0f;
 	int i;
@@ -288,11 +277,6 @@ struct Vector getMaxCorrelation(struct Vector *dataSets, int dataSetSize, int m,
 		if (vecEqual(highestCorrelation, correlation)) {
 			highestGamma = gamma;
 		}
-
-		#ifdef DEBUG1
-		printf("=== Printing correlation:gamma %d ====\n", highestGamma);
-		printDataSets(&highestCorrelation, 1);
-		#endif
 	}
 	*gOpt = highestGamma;
 	return highestCorrelation;
@@ -311,23 +295,11 @@ int getZeeStepCount(struct Vector *dataSets, int numSamples) {
 	for (i = 0; i < numSamples; ++i) {
 		struct Vector highestCorrelation;
 		highestCorrelation = getMaxCorrelation(dataSets, numSamples, i, gMin, gMax, &gOpt);
-
-		#ifdef DEBUG1
-		printf("*** Printing Highest Correlation ***\n");
-		printDataSets(&highestCorrelation, 1);
-		#endif
-
 		if (getAccelStdDevOfMag(dataSets, numSamples, i, gOpt) < 0.01) {
 			state = IDLE;
 			numStepsCtr = 0;
-			#ifdef DEBUG1
-			printf("*** STATE: IDLE @ gamma %d, gMax = %d, gMin = %d ***\n", gOpt, gMax, gMin);
-			#endif
 		} else if (vecMoreThanConst(highestCorrelation, 0.7)) {
 			state = WALKING;
-			#ifdef DEBUG
-			printf("*** STATE: WALKING @ sample: %d/%d gamma %d, gMax = %d, gMin = %d ***\n", i, numSamples, gOpt, gMax, gMin);
-			#endif
 			gMin = gOpt - 40;
 			if (gMin < gAbsMin) {
 				gMin = gAbsMin;
@@ -347,9 +319,6 @@ int getZeeStepCount(struct Vector *dataSets, int numSamples) {
 		if (numStepsCtr > gOpt / 2) {
 			numSteps += 1;
 			numStepsCtr = 0;
-			#ifdef DEBUG
-			printf("*** Cur Num Steps: %d ***\n", numSteps);
-			#endif
 			continue;
 		}
 		numStepsCtr += 1;
