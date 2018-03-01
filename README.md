@@ -22,7 +22,11 @@ The helper python program is: `formatHelper.py`<br>
 
 
 ## Step counting
-The code for step counting is: `count_step.c`<br>
-> To compile just use the script: ./make\_count\_step or gcc count\_step.c -o count\_step.
+The code for step counting is: `count_step.c`and it is located in the `algo folder` <br>
+> To compile just use the script: cd into the algo folder and type the following
 >
-> The usage of the program is: ./count_step \<csv file\>.csv.
+> rm ./count_step
+>
+> make
+>
+> The usage of the program is: ./count_step ..\\csv\<csv file\>.csv.
