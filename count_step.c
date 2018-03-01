@@ -22,7 +22,7 @@ void printDataSets(struct Vector *dataSets, int numLines);
 float getMeanOfSamplesInWindow(struct Vector *dataSets, int numLines, int windowRange, int start, int end);
 float getVarianceOfSamplesInWindow(struct Vector *dataSets, int numLines, int windowRange, int start, int end);
 float *getStandardDevArray(struct Vector *dataSets, int numLines, int windowRange);
-int getNumOfSteps(float *standardDevArray, int numLines, int windowRange, float threshold);
+int getNumOfSteps(float *standardDevArray, int numLines, int windowRange, float thresholdReady, float thresholdRecord);
 
 /*== To be implemented! ==*/
 int getDeadReckoningStepCount(struct Vector *dataSets, int numLines) {
@@ -30,8 +30,9 @@ int getDeadReckoningStepCount(struct Vector *dataSets, int numLines) {
 	printDataSets(dataSets, numLines);
 	int windowRange = 15;
 	float *varianceArray = getStandardDevArray(dataSets, numLines, windowRange);
-	float threshold = 2.0;
-	int totalSteps = getNumOfSteps(varianceArray, numLines, windowRange, threshold);
+    float thresholdReady = 2.0;
+    float thresholdRecord = 1.0;
+	int totalSteps = getNumOfSteps(varianceArray, numLines, windowRange, thresholdReady, thresholdRecord);
 	printf("Number of Steps: %d\n", totalSteps);
 
 	free(varianceArray);
@@ -147,21 +148,21 @@ float *getStandardDevArray(struct Vector *dataSets, int numLines, int windowRang
 	return arrayOfStandardDev;
 }
 
-int getNumOfSteps(float *standardDevArray, int numLines, int windowRange, float threshold) {
+int getNumOfSteps(float *standardDevArray, int numLines, int windowRange, float thresholdReady, float thresholdRecord) {
 	int numOfSteps = 0;
-	int state = 0; //0 for idle, 1 for movement
+	int state = 0; //0 for idle, 1 for ready mode
 	int i;
 	int temp = state;
 	for (i = 0; i < numLines - (2 * windowRange); i++) {
 		temp = state;
-		if (standardDevArray[i] > threshold) {
+		if (standardDevArray[i] > thresholdReady) {
 			state = 1;
 		}
-		if (standardDevArray[i] < threshold) {
-			if (temp == 1) {
+		if (standardDevArray[i] < thresholdRecord) {
+			if (temp == 1) { // originally in ready mode
 				numOfSteps += 1;
 			}
-			state = 0;
+			state = 0; // Reset state to be back to idle
 		}
 	}
 	return numOfSteps;
@@ -176,3 +177,4 @@ void printDataSets(struct Vector *dataSets, int numLines) {
 	for (i = 0; i < numLines; i++ ) {
 		printf("Data %i: X=%.2f, Y=%.2f, Z=%.2f\n", i + 1, dataSets[i].x, dataSets[i].y, dataSets[i].z);
 	}
+}
