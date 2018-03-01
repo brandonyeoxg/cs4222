@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+	Returns the mean of the x, y, z axes of the samples.
+*/
 struct Vector getAccelMean(struct Vector *dataSets, int numLines) {
 	if (numLines < 1) {
 		printf("There are no lines to compute for the mean\n");
@@ -27,6 +30,9 @@ struct Vector getAccelMean(struct Vector *dataSets, int numLines) {
 	return outputVec;
 }
 
+/* 
+	Returns the standard deviation of the x, y, z axes of the samples.
+*/
 struct Vector getAccelStdDev(struct Vector *dataSets, int numSamples) {
 	struct Vector meanVec = getAccelMean(dataSets, numSamples);
 	struct Vector stdDevVec;
@@ -45,6 +51,9 @@ struct Vector getAccelStdDev(struct Vector *dataSets, int numSamples) {
 	return stdDevVec;
 }
 
+/* 
+	Returns the mean magnitude of the samples.
+*/
 float getMean(float *dataSets, int numSamples) {
 	if (numSamples < 1) {
 		printf("There are no lines to compute for the mean\n");
@@ -58,6 +67,9 @@ float getMean(float *dataSets, int numSamples) {
 	return output / numSamples;	
 }
 
+/* 
+	Returns the standard deviation of the samples.
+*/
 float getStdDev(float *dataSets, int numSamples) {
 	float mean = getMean(dataSets, numSamples);
 	float stdDev = 0.0f;
@@ -72,7 +84,7 @@ float getStdDev(float *dataSets, int numSamples) {
 }
 
 /*
-	Gets the mean value of samples between fromIdx to the window size
+	Returns the mean of samples between fromIdx to the window size.
 */
 struct Vector getAccelMeanFromTill(struct Vector *dataSets, int dataSetSize, int fromIdx, int windowSize) {
 	int k;
@@ -91,6 +103,9 @@ struct Vector getAccelMeanFromTill(struct Vector *dataSets, int dataSetSize, int
 	return outputMeanVec;
 }
 
+/*
+	Returns the standard deviation of samples between fromIdx to the window size.
+*/
 struct Vector getAccelStdDevFromTill(struct Vector *dataSets, int dataSetSize, int fromIdx, int windowSize) {
 	int k;
 	struct Vector *newSampleDataSet = (struct Vector *) malloc(sizeof(struct Vector) * windowSize);
@@ -108,6 +123,9 @@ struct Vector getAccelStdDevFromTill(struct Vector *dataSets, int dataSetSize, i
 	return outputStdDevVec;
 }
 
+/*
+	Returns the standard deviation of the magnitude of the samples.
+*/
 float getAccelStdDevOfMag(struct Vector *dataSets, int dataSetSize, int fromIdx, int windowSize) {
 	int k;
 	float *newSampleMagnitude = (float *) malloc(sizeof(float) * windowSize);
@@ -122,6 +140,9 @@ float getAccelStdDevOfMag(struct Vector *dataSets, int dataSetSize, int fromIdx,
 	return stdDev;
 }
 
+/*
+	Returns the correlation value of the sample between the gamma window.
+*/
 struct Vector getAutoCorrelation(struct Vector *dataSets, int dataSetSize, int m, int gamma) {
 	int k;
 	struct Vector meanVec;
@@ -156,6 +177,9 @@ struct Vector getAutoCorrelation(struct Vector *dataSets, int dataSetSize, int m
 	return outputCorrelation;
 }
 
+/*
+	Returns the maximum correlation possible within the given gamma minimum and gamma maximum.
+*/
 struct Vector getMaxCorrelation(struct Vector *dataSets, int dataSetSize, int m, int gMin, int gMax, int *gOpt) {
 	int gamma = 0;
 	struct Vector highestCorrelation;
@@ -176,6 +200,9 @@ struct Vector getMaxCorrelation(struct Vector *dataSets, int dataSetSize, int m,
 	return highestCorrelation;
 }
 
+/*
+	Handles the shifting of the most optimum gamma, the gMax and gMin are shifted according to the optimum gamma.
+*/
 void handleGammaWindowShift(int gOpt, int *gMin, int *gMax, int gAbsMin, int gAbsMax) {
 	*gMin = gOpt - 40;
 	if (*gMin < gAbsMin) {

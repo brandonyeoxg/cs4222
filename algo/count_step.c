@@ -15,8 +15,9 @@ float getVarianceOfSamplesInWindow(struct Vector *dataSets, int numLines, int wi
 float *getStandardDevArray(struct Vector *dataSets, int numLines, int windowRange);
 int getNumOfSteps(float *standardDevArray, int numLines, int windowRange, float thresholdReady, float thresholdRecord);
 
-/*== To be implemented! ==*/
+/*== Gets the number of step count using the Dead Reckoning Algorithm (NOT USED IN THE RUNNING OF COUNT STEP PROGRAM) ==*/
 int getDeadReckoningStepCount(struct Vector *dataSets, int numLines);
+/*== Gets the number of step count using the Zee algorithm (USED IN THE RUNNING OF THE COUNT STEP PROGRAM==*/
 int getZeeStepCount(struct Vector *dataSets, int numSamples);
 
 int main(int argc, char *argv[]) {
@@ -34,19 +35,14 @@ int main(int argc, char *argv[]) {
 }
 
 /*
-	Gets the line count of the CSV file.
-*/
-int getCSVLineCount(FILE *file) {
-	int lines = 0;
-	char c;
-	for (c = getc(file); c != EOF; c = getc(file)) {
-		if (c == '\n') {
-			lines += 1;
-		}
-	}
-	return lines;
-}
+	Gets the step count using the Zee algorithm.
+	Note: The functions used in here can be found in zee.c
 
+	Finds the highest correlation with the gamma window done with gMin and gMax.
+	Checks if correlation is > 0.7, if it is we are in WALKING state.
+	If the standard deviation of the sample's magnitude is < 0.01, we are in IDLE state.
+	Steps are counted if state == WALKING and we are in the (gamma/2) iteration since WALKING STATE.
+*/
 int getZeeStepCount(struct Vector *dataSets, int numSamples) {
 	printf("=== Starting Zee step counting ===\n");
 	int gMin = 120;
@@ -193,6 +189,21 @@ int getNumOfSteps(float *standardDevArray, int numLines, int windowRange, float 
     }
     return numOfSteps;
 }
+
+/*
+	Gets the line count of the CSV file.
+*/
+int getCSVLineCount(FILE *file) {
+	int lines = 0;
+	char c;
+	for (c = getc(file); c != EOF; c = getc(file)) {
+		if (c == '\n') {
+			lines += 1;
+		}
+	}
+	return lines;
+}
+
 /*
 	Prints the entire data set, used as a debug func.
 */
