@@ -1,1 +1,0 @@
-gcc count_step.c -lm -o count_step
