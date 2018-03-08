@@ -1,6 +1,6 @@
 # cs4222 hw3
 ## Compiling of runicast
-Run `make_runicast` to make `.bin` and `.elf` fils for runicast  <br>
+Run `./make_runicast` script to make `.bin` and `.elf` files for runicast  <br>
 
 ## NodeId conversion to Contiki representation
 Run `python node_id_converter.py`. <br>
