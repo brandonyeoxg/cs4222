@@ -53,10 +53,10 @@
 #define PAYLOAD_SIZE        50
 #define EXT_FLASH_BASE_ADDR 0
 #define EXT_FLASH_SIZE      32*1024
-#define TRANSMISSION_DELAY  1 * CLOCK_SECOND
+#define TRANSMISSION_DELAY  10 * CLOCK_SECOND
 
 /* RCV addr */
-#define RCV_ADDR_0          187
+#define RCV_ADDR_0          154
 #define RCV_ADDR_1          7
 
 #define DEBUG
@@ -106,9 +106,19 @@ recv_runicast(struct runicast_conn *c, const linkaddr_t *from, uint8_t seqno)
     e->seq = seqno;
   }
 
-  printf("runicast message received from %d.%d, seqno %d\n",
+  printf("runicast message received from %d.%d, seqno %d:",
     from->u8[0], from->u8[1], seqno);
+
+  // prints all the data
+  int payloadSize = packetbuf_datalen();
+  int i;
+  int *payload = (int*)packetbuf_dataptr();
+  for (i = 0; i < payloadSize; ++i) {
+    printf(" %d", *(payload + i));
+  }
+  printf("\n");
 }
+
 static void
 sent_runicast(struct runicast_conn *c, const linkaddr_t *to, uint8_t retransmissions)
 {
@@ -151,7 +161,6 @@ static const struct runicast_callbacks runicast_callbacks = {recv_runicast,
   }
 
   static void sendPayload(struct runicast_conn *runicast, int payloadSize, int *payload) {
-    if(!runicast_is_transmitting(runicast)) {
       linkaddr_t recv;
       packetbuf_copyfrom(payload, payloadSize);
       recv.u8[0] = RCV_ADDR_0;
@@ -162,7 +171,6 @@ static const struct runicast_callbacks runicast_callbacks = {recv_runicast,
         recv.u8[0],
         recv.u8[1]);
       runicast_send(runicast, &recv, MAX_RETRANSMISSIONS);
-    }
   }
 
 /*---------------------------------------------------------------------------*/
@@ -186,22 +194,28 @@ static const struct runicast_callbacks runicast_callbacks = {recv_runicast,
        linkaddr_node_addr.u8[1] == RCV_ADDR_1) {
       PROCESS_WAIT_EVENT_UNTIL(0);
     }  
-
+    static int seqNum = 0;
     while(pointer < EXT_FLASH_SIZE) {
       etimer_set(&et, TRANSMISSION_DELAY);
       PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-      int payload[PAYLOAD_SIZE] = { 0 };
-      int payloadSize = 0;
-      payloadSize = obtainPayload(&address_offset, payload);
-      sendPayload(&runicast, payloadSize, payload);
-      pointer = EXT_FLASH_BASE_ADDR + address_offset;
+      
+      if(!runicast_is_transmitting(&runicast)) {
+        int payload[PAYLOAD_SIZE] = { 0 };
+        int payloadSize = 0;        
+        payloadSize = obtainPayload(&address_offset, payload);
 
-#ifdef DEBUG1
-      int k;
-      for(k = 0; k < payloadSize; k++) {
-        printf("Payload %d: %d\n", k, payload[k]);
-      }
+#ifdef DEBUG
+        int k;
+        printf("Payload seqno %d:", seqNum);
+        for(k = 0; k < payloadSize; k++) {
+          printf(" %d", payload[k]);
+        }
+        printf("\n");
 #endif
+        sendPayload(&runicast, payloadSize, payload);
+        pointer = EXT_FLASH_BASE_ADDR + address_offset;
+        seqNum += 1;
+      }
     }
     PROCESS_END();
   }
