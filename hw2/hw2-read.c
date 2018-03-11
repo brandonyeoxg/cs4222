@@ -33,7 +33,6 @@ PROCESS_THREAD(read_external_flash, ev, data){
     printf("Time slice:%d, Acc X: %d, Acc Y: %d, Acc Z: %d\n", sensor_data_int[TIME_SLICE] ,sensor_data_int[X_AXIS], sensor_data_int[Y_AXIS], sensor_data_int[Z_AXIS]);
     address_offset += sizeof(sensor_data_int);
     pointer = EXT_FLASH_BASE_ADDR + address_offset;
-  
   }
   ext_flash_close();
   PROCESS_END();

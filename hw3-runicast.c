@@ -50,6 +50,11 @@
 
 #define MAX_RETRANSMISSIONS 4
 #define NUM_HISTORY_ENTRIES 4
+#define PAYLOAD_SIZE        50
+#define EXT_FLASH_BASE_ADDR 0
+#define EXT_FLASH_SIZE      32*1024
+#define TRANSMISSION_DELAY  1 * CLOCK_SECOND
+#define DEBUG
 
 /*---------------------------------------------------------------------------*/
 PROCESS(runicast_process, "runicast test");
@@ -116,47 +121,86 @@ static const struct runicast_callbacks runicast_callbacks = {recv_runicast,
 							     timedout_runicast};
 static struct runicast_conn runicast;
 /*---------------------------------------------------------------------------*/
+
+static int obtainPayload(int address_offset, int * payload) {
+    printf("READING FROM FLASH:\n");
+    int executed = ext_flash_open();
+    if(!executed) {
+      printf("Cannot open flash\n");
+      return 0;
+    }
+    int payloadIdx;
+    static int sensor_data_int[1];
+    for (payloadIdx = 0; payloadIdx < PAYLOAD_SIZE; ++payloadIdx) {
+      ext_flash_read(address_offset, sizeof(sensor_data_int),  (int *)&sensor_data_int);
+      *(payload + payloadIdx) = sensor_data_int[0];
+      address_offset += sizeof(sensor_data_int);
+    }
+    ext_flash_close();
+    return address_offset;
+}
+
+/*---------------------------------------------------------------------------*/
 PROCESS_THREAD(runicast_process, ev, data)
 {
   PROCESS_EXITHANDLER(runicast_close(&runicast);)
 
   PROCESS_BEGIN();
-
+  static struct etimer et;
   runicast_open(&runicast, 144, &runicast_callbacks);
-
   /* OPTIONAL: Sender history */
   list_init(history_table);
-  memb_init(&history_mem);
+  memb_init(&history_mem);  
 
-  /* Receiver node: do nothing */
-  if(linkaddr_node_addr.u8[0] == 1 &&
-     linkaddr_node_addr.u8[1] == 0) {
-    PROCESS_WAIT_EVENT_UNTIL(0);
-  }
+  /* Initalise code for data reading from flash */
+  static int address_offset = 0;
+  int pointer = EXT_FLASH_BASE_ADDR + address_offset;
 
-  while(1) {
-    static struct etimer et;
-
-    etimer_set(&et, 10*CLOCK_SECOND);
+  while(pointer < EXT_FLASH_SIZE) {
+    etimer_set(&et, TRANSMISSION_DELAY);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-    if(!runicast_is_transmitting(&runicast)) {
-      linkaddr_t recv;
-
-      packetbuf_copyfrom("Hello", 5);
-      recv.u8[0] = 1;
-      recv.u8[1] = 0;
-
-      printf("%u.%u: sending runicast to address %u.%u\n",
-	     linkaddr_node_addr.u8[0],
-	     linkaddr_node_addr.u8[1],
-	     recv.u8[0],
-	     recv.u8[1]);
-
-      runicast_send(&runicast, &recv, MAX_RETRANSMISSIONS);
+    int payload[PAYLOAD_SIZE] = { 0 };
+    address_offset = obtainPayload(address_offset, payload);
+#ifdef DEBUG
+    int k;
+    for(k = 0; k < PAYLOAD_SIZE; k++) {
+      printf("Payload %d: %d\n", k, payload[k]);
     }
-  }
+#endif
+    pointer = EXT_FLASH_BASE_ADDR + address_offset;
 
+    // sendPayload(payload)
+  }
+  // ext_flash_close();
+
+  /* Receiver node: do nothing */
+  // if(linkaddr_node_addr.u8[0] == 1 &&
+  //    linkaddr_node_addr.u8[1] == 0) {
+  //   PROCESS_WAIT_EVENT_UNTIL(0);
+  // }  
+  // while(1) {
+  //   static struct etimer et;
+
+  //   etimer_set(&et, 10*CLOCK_SECOND);
+  //   PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+
+  //   if(!runicast_is_transmitting(&runicast)) {
+  //     linkaddr_t recv;
+
+  //     packetbuf_copyfrom("Hello", 5);
+  //     recv.u8[0] = 1;
+  //     recv.u8[1] = 0;
+
+  //     printf("%u.%u: sending runicast to address %u.%u\n",
+	 //     linkaddr_node_addr.u8[0],
+	 //     linkaddr_node_addr.u8[1],
+	 //     recv.u8[0],
+	 //     recv.u8[1]);
+
+  //     runicast_send(&runicast, &recv, MAX_RETRANSMISSIONS);
+  //   }
+  // }
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
