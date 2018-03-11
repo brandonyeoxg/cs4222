@@ -52,8 +52,8 @@
 #define NUM_HISTORY_ENTRIES 4
 
 /*---------------------------------------------------------------------------*/
-PROCESS(test_runicast_process, "runicast test");
-AUTOSTART_PROCESSES(&test_runicast_process);
+PROCESS(runicast_process, "runicast test");
+AUTOSTART_PROCESSES(&runicast_process);
 /*---------------------------------------------------------------------------*/
 /* OPTIONAL: Sender history.
  * Detects duplicate callbacks at receiving nodes.
@@ -116,7 +116,7 @@ static const struct runicast_callbacks runicast_callbacks = {recv_runicast,
 							     timedout_runicast};
 static struct runicast_conn runicast;
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(test_runicast_process, ev, data)
+PROCESS_THREAD(runicast_process, ev, data)
 {
   PROCESS_EXITHANDLER(runicast_close(&runicast);)
 
