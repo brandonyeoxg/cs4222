@@ -115,7 +115,7 @@ recv_runicast(struct runicast_conn *c, const linkaddr_t *from, uint8_t seqno)
   int *payload = (int *)packetbuf_dataptr();
   printf(" payload size %d:", payloadSize);
   for (i = 0; i < payloadSize; ++i) {
-    printf(" %d", *(payload + i));
+    printf(" %d", payload[i]);
   }
   printf("\n");
 }
