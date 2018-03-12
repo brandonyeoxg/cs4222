@@ -110,11 +110,11 @@ recv_runicast(struct runicast_conn *c, const linkaddr_t *from, uint8_t seqno)
     from->u8[0], from->u8[1], seqno);
 
   // prints all the data
-  int payloadSize = packetbuf_datalen();
+  int payloadSize = packetbuf_datalen() / sizeof(int);
   int i;
   int *payload = (int*)packetbuf_dataptr();
-  printf(" payload size: %d:", payloadSize);
-  for (i = 0; i < payloadSize; i+=4) {
+  printf(" payload size %d:", payloadSize);
+  for (i = 0; i < payloadSize; ++i) {
     printf(" %d", *(payload + i));
   }
   printf("\n");
@@ -207,7 +207,7 @@ static const struct runicast_callbacks runicast_callbacks = {recv_runicast,
 
 #ifdef DEBUG
         int k;
-        printf("Payload seqno %d payload size: %d:", seqNum, payloadSize);
+        printf("Payload seqno %d payload size %d:", seqNum, payloadSize);
         for(k = 0; k < payloadSize; k++) {
           printf(" %d", payload[k]);
         }
