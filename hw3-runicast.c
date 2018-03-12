@@ -50,14 +50,14 @@
 
 #define MAX_RETRANSMISSIONS 4
 #define NUM_HISTORY_ENTRIES 4
-#define PAYLOAD_SIZE        50
+#define PAYLOAD_SIZE        12
 #define EXT_FLASH_BASE_ADDR 0
 #define EXT_FLASH_SIZE      32*1024
 #define TRANSMISSION_DELAY  10 * CLOCK_SECOND
 
 /* RCV addr */
 #define RCV_ADDR_0          179
-#define RCV_ADDR_1          13
+#define RCV_ADDR_1          130
 
 #define DEBUG
 
@@ -106,13 +106,14 @@ recv_runicast(struct runicast_conn *c, const linkaddr_t *from, uint8_t seqno)
     e->seq = seqno;
   }
 
-  printf("runicast message received from %d.%d, seqno %d:",
+  printf("runicast message received from %d.%d, seqno %d ",
     from->u8[0], from->u8[1], seqno);
 
   // prints all the data
   int payloadSize = packetbuf_datalen();
   int i;
   int *payload = (int*)packetbuf_dataptr();
+  printf(" payload size: %d:", payloadSize);
   for (i = 0; i < payloadSize; ++i) {
     printf(" %d", *(payload + i));
   }
@@ -162,7 +163,7 @@ static const struct runicast_callbacks runicast_callbacks = {recv_runicast,
 
   static void sendPayload(struct runicast_conn *runicast, int payloadSize, int *payload) {
       linkaddr_t recv;
-      packetbuf_copyfrom(payload, payloadSize);
+      packetbuf_copyfrom(payload, payloadSize * sizeof(int));
       recv.u8[0] = RCV_ADDR_0;
       recv.u8[1] = RCV_ADDR_1;
       printf("%u.%u: sending runicast to address %u.%u\n",
@@ -206,7 +207,7 @@ static const struct runicast_callbacks runicast_callbacks = {recv_runicast,
 
 #ifdef DEBUG
         int k;
-        printf("Payload seqno %d:", seqNum);
+        printf("Payload seqno %d payload size: %d:", seqNum, payloadSize);
         for(k = 0; k < payloadSize; k++) {
           printf(" %d", payload[k]);
         }
