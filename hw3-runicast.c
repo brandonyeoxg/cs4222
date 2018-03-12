@@ -53,7 +53,7 @@
 #define PAYLOAD_SIZE        12
 #define EXT_FLASH_BASE_ADDR 0
 #define EXT_FLASH_SIZE      32 * 1000
-#define TRANSMISSION_DELAY  0.1 * CLOCK_SECOND
+#define TRANSMISSION_DELAY  0.001 * CLOCK_SECOND
 
 /* RCV addr */
 #define RCV_ADDR_0          179
@@ -116,9 +116,12 @@ recv_runicast(struct runicast_conn *c, const linkaddr_t *from, uint8_t seqno)
   int *payload = (int *)packetbuf_dataptr();
   printf(" payload size %d:", payloadSize);
   for (i = 0; i < payloadSize; ++i) {
+    if (i == payloadSize-1) { 
+      printf(" %d\n", payload[i]);
+      continue;
+    }
     printf(" %d", payload[i]);
   }
-  printf("\n");
 }
 
 static void
@@ -199,9 +202,8 @@ PROCESS_THREAD(runicast_process, ev, data)
   }  
   static int seqNum = 0;
   while(pointer < EXT_FLASH_SIZE) {
-    //etimer_set(&et, TRANSMISSION_DELAY);
-    //PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-    
+    etimer_set(&et, TRANSMISSION_DELAY);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
     if(!runicast_is_transmitting(&runicast)) {
       int payload[PAYLOAD_SIZE] = { 0 };
       int payloadSize = 0;        
@@ -220,6 +222,7 @@ PROCESS_THREAD(runicast_process, ev, data)
       seqNum += 1;
     }
   }
+  printf("Transfer done\n");
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
