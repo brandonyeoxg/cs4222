@@ -49,15 +49,15 @@
 #include "dev/leds.h"
 
 #define MAX_RETRANSMISSIONS 4
-#define NUM_HISTORY_ENTRIES 1000
+#define NUM_HISTORY_ENTRIES 4
 #define PAYLOAD_SIZE        12
 #define EXT_FLASH_BASE_ADDR 0
 #define EXT_FLASH_SIZE      32 * 1000
-#define TRANSMISSION_DELAY  0.001 * CLOCK_SECOND
+#define TRANSMISSION_DELAY  0.0001 * CLOCK_SECOND
 
 /* RCV addr */
-#define RCV_ADDR_0          179
-#define RCV_ADDR_1          130
+#define RCV_ADDR_0          154
+#define RCV_ADDR_1          7
 
 #define DEBUG
 
