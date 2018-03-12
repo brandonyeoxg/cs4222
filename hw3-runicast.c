@@ -106,13 +106,13 @@ recv_runicast(struct runicast_conn *c, const linkaddr_t *from, uint8_t seqno)
     e->seq = seqno;
   }
 
-  printf("runicast message received from %d.%d, seqno %d ",
+  printf("\nrunicast message received from %d.%d, seqno %d ",
     from->u8[0], from->u8[1], seqno);
 
   // prints all the data
   int payloadSize = packetbuf_datalen() / sizeof(int);
   int i;
-  int *payload = (int*)packetbuf_dataptr();
+  int *payload = (int *)packetbuf_dataptr();
   printf(" payload size %d:", payloadSize);
   for (i = 0; i < payloadSize; ++i) {
     printf(" %d", *(payload + i));
