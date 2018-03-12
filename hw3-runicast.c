@@ -53,7 +53,7 @@
 #define PAYLOAD_SIZE        12
 #define EXT_FLASH_BASE_ADDR 0
 #define EXT_FLASH_SIZE      32*1024
-#define TRANSMISSION_DELAY  10 * CLOCK_SECOND
+#define TRANSMISSION_DELAY  0.1 * CLOCK_SECOND
 
 /* RCV addr */
 #define RCV_ADDR_0          179
@@ -106,7 +106,7 @@ recv_runicast(struct runicast_conn *c, const linkaddr_t *from, uint8_t seqno)
     e->seq = seqno;
   }
 
-  printf("\nrunicast message received from %d.%d, seqno %d ",
+  printf("runicast message received from %d.%d, seqno %d ",
     from->u8[0], from->u8[1], seqno);
 
   // prints all the data
