@@ -53,7 +53,7 @@
 #define PAYLOAD_SIZE        12
 #define EXT_FLASH_BASE_ADDR 0
 #define EXT_FLASH_SIZE      32 * 1000
-#define TRANSMISSION_DELAY  0.0001 * CLOCK_SECOND
+#define TRANSMISSION_DELAY  0.001 * CLOCK_SECOND
 
 /* RCV addr */
 #define RCV_ADDR_0          179
