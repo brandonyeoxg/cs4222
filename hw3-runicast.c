@@ -127,14 +127,14 @@ recv_runicast(struct runicast_conn *c, const linkaddr_t *from, uint8_t seqno)
 static void
 sent_runicast(struct runicast_conn *c, const linkaddr_t *to, uint8_t retransmissions)
 {
-  printf("runicast message sent to %d.%d, retransmissions %d\n",
-    to->u8[0], to->u8[1], retransmissions);
+  // printf("runicast message sent to %d.%d, retransmissions %d\n",
+  //   to->u8[0], to->u8[1], retransmissions);
 }
 static void
 timedout_runicast(struct runicast_conn *c, const linkaddr_t *to, uint8_t retransmissions)
 {
-  printf("runicast message timed out when sending to %d.%d, retransmissions %d\n",
-    to->u8[0], to->u8[1], retransmissions);
+  // printf("runicast message timed out when sending to %d.%d, retransmissions %d\n",
+  //   to->u8[0], to->u8[1], retransmissions);
 }
 static const struct runicast_callbacks runicast_callbacks = {recv_runicast,
   sent_runicast,
@@ -200,9 +200,17 @@ PROCESS_THREAD(runicast_process, ev, data)
      linkaddr_node_addr.u8[1] == RCV_ADDR_1) {
     PROCESS_WAIT_EVENT_UNTIL(0);
   }  
-  int payload[PAYLOAD_SIZE] = { 0 };
-  int payloadSize = obtainPayload(&address_offset, payload);
-  int i = 0;
+  static int payload[PAYLOAD_SIZE] = { 0 };
+  static int payloadSize = 0; 
+  payloadSize = obtainPayload(&address_offset, payload);
+  static int i = 0;
+
+  int k;
+  printf("Payload payload size %d:", payloadSize);
+  for(k = 0; k < payloadSize; k++) {
+    printf(" %d", payload[k]);
+  }
+  printf("\n");  
   while(i < 666) {
     etimer_set(&et, TRANSMISSION_DELAY);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
