@@ -231,6 +231,7 @@ PROCESS_THREAD(runicast_process, ev, data)
       // pointer = EXT_FLASH_BASE_ADDR + address_offset;
       // seqNum += 1;
       i += 1;
+      printf("i: %d\n", i);
     }
   }
   printf("Transfer done\n");
