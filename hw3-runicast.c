@@ -200,26 +200,29 @@ PROCESS_THREAD(runicast_process, ev, data)
      linkaddr_node_addr.u8[1] == RCV_ADDR_1) {
     PROCESS_WAIT_EVENT_UNTIL(0);
   }  
-  static int seqNum = 0;
-  while(pointer < EXT_FLASH_SIZE) {
+  int payload[PAYLOAD_SIZE] = { 0 };
+  int payloadSize = obtainPayload(&address_offset, payload);
+  int i = 0;
+  while(i < 666) {
     etimer_set(&et, TRANSMISSION_DELAY);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
     if(!runicast_is_transmitting(&runicast)) {
-      int payload[PAYLOAD_SIZE] = { 0 };
-      int payloadSize = 0;        
-      payloadSize = obtainPayload(&address_offset, payload);
+      // int payload[PAYLOAD_SIZE] = { 0 };
+      // int payloadSize = 0;        
+      // payloadSize = obtainPayload(&address_offset, payload);
 
-#ifdef DEBUGOFF
-      int k;
-      printf("Payload seqno %d payload size %d:", seqNum, payloadSize);
-      for(k = 0; k < payloadSize; k++) {
-        printf(" %d", payload[k]);
-      }
-      printf("\n");
-#endif
+// #ifdef DEBUGOFF
+//       int k;
+//       printf("Payload seqno %d payload size %d:", seqNum, payloadSize);
+//       for(k = 0; k < payloadSize; k++) {
+//         printf(" %d", payload[k]);
+//       }
+//       printf("\n");
+// #endif
       sendPayload(&runicast, payloadSize, payload);
-      pointer = EXT_FLASH_BASE_ADDR + address_offset;
-      seqNum += 1;
+      // pointer = EXT_FLASH_BASE_ADDR + address_offset;
+      // seqNum += 1;
+      i += 1;
     }
   }
   printf("Transfer done\n");
