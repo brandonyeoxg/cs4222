@@ -209,7 +209,7 @@ PROCESS_THREAD(runicast_process, ev, data)
       int payloadSize = 0;        
       payloadSize = obtainPayload(&address_offset, payload);
 
-#ifdef DEBUG
+#ifdef DEBUGOFF
       int k;
       printf("Payload seqno %d payload size %d:", seqNum, payloadSize);
       for(k = 0; k < payloadSize; k++) {
