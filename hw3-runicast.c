@@ -170,12 +170,12 @@ static void sendPayload(struct runicast_conn *runicast, int numPayloadElement, i
     packetbuf_copyfrom(payload, numPayloadElement * sizeof(int));
     recv.u8[0] = RCV_ADDR_0;
     recv.u8[1] = RCV_ADDR_1;
-    printf("%u.%u: sending runicast to address %u.%u of size: %d\n",
-      linkaddr_node_addr.u8[0],
-      linkaddr_node_addr.u8[1],
-      recv.u8[0],
-      recv.u8[1],
-      numPayloadElement * sizeof(int));
+    //printf("%u.%u: sending runicast to address %u.%u of size: %d\n",
+    //linkaddr_node_addr.u8[0],
+    //linkaddr_node_addr.u8[1],
+    //recv.u8[0],
+    //recv.u8[1],
+    //numPayloadElement * sizeof(int));
     runicast_send(runicast, &recv, MAX_RETRANSMISSIONS);
 }
 
