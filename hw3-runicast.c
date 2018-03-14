@@ -49,7 +49,7 @@
 #include "dev/leds.h"
 
 #define MAX_RETRANSMISSIONS 4
-#define NUM_HISTORY_ENTRIES 4
+#define NUM_HISTORY_ENTRIES 1000
 #define PAYLOAD_SIZE        12
 #define EXT_FLASH_BASE_ADDR 0
 #define EXT_FLASH_SIZE      32 * 1000
