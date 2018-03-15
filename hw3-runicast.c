@@ -59,6 +59,9 @@
 #define RCV_ADDR_0          88
 #define RCV_ADDR_1          0
 
+#define NO_DATA             0
+#define HAS_DATA            1
+
 #define DEBUG
 
 /*---------------------------------------------------------------------------*/
@@ -139,7 +142,7 @@ timedout_runicast(struct runicast_conn *c, const linkaddr_t *to, uint8_t retrans
 static const struct runicast_callbacks runicast_callbacks = {recv_runicast,
   sent_runicast,
   timedout_runicast};
-  static struct runicast_conn runicast;
+static struct runicast_conn runicast;
 /*---------------------------------------------------------------------------*/
 
 static int obtainPayload(int *address_offset, int *payload) {
@@ -199,18 +202,18 @@ PROCESS_THREAD(runicast_process, ev, data)
   if(linkaddr_node_addr.u8[0] == RCV_ADDR_0 &&
      linkaddr_node_addr.u8[1] == RCV_ADDR_1) {
     PROCESS_WAIT_EVENT_UNTIL(0);
-  }  
-  static int payload[PAYLOAD_SIZE] = { 0 };
-  static int payloadSize = 0; 
-  payloadSize = obtainPayload(&address_offset, payload);
+  }
+  int hasDataLoaded = NO_DATA;
   while(pointer < EXT_FLASH_SIZE) {
+    int payload[PAYLOAD_SIZE] = { 0 };
+    int payloadSize = 0;            
+    if (hasDataLoaded == NO_DATA) {
+      payloadSize = obtainPayload(&address_offset, payload);
+      hasDataLoaded = HAS_DATA;
+    }
     etimer_set(&et, TRANSMISSION_DELAY);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-    if(!runicast_is_transmitting(&runicast)) {
-      int payload[PAYLOAD_SIZE] = { 0 };
-      int payloadSize = 0;        
-      payloadSize = obtainPayload(&address_offset, payload);
-
+    if(!runicast_is_transmitting(&runicast) && hasDataLoaded == HAS_DATA) {
 #ifdef DEBUGOFF
       int k;
       printf("Payload seqno %d payload size %d:", seqNum, payloadSize);
@@ -220,6 +223,7 @@ PROCESS_THREAD(runicast_process, ev, data)
       printf("\n");
 #endif
       sendPayload(&runicast, payloadSize, payload);
+      hasDataLoaded = NO_DATA;
       pointer = EXT_FLASH_BASE_ADDR + address_offset;
     }
   }
