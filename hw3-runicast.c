@@ -49,7 +49,7 @@
 #include "dev/leds.h"
 
 #define MAX_RETRANSMISSIONS 4
-#define NUM_HISTORY_ENTRIES 1000
+#define NUM_HISTORY_ENTRIES 4
 #define PAYLOAD_SIZE        12
 #define EXT_FLASH_BASE_ADDR 0
 #define EXT_FLASH_SIZE      32 * 1000
@@ -146,13 +146,7 @@ static struct runicast_conn runicast;
 /*---------------------------------------------------------------------------*/
 
 static int obtainPayload(int *address_offset, int *payload) {
-  // printf("READING FROM FLASH:\n");
-  int executed = ext_flash_open();
-  if(!executed) {
-    printf("Cannot open flash\n");
-    ext_flash_close();
-    return 0;
-  }
+
   int payloadIdx;
   static int sensor_data_int[1];
   for(payloadIdx = 0; payloadIdx < PAYLOAD_SIZE; ++payloadIdx) {
@@ -164,7 +158,7 @@ static int obtainPayload(int *address_offset, int *payload) {
     *(payload + payloadIdx) = sensor_data_int[0];
     (*address_offset) += sizeof(sensor_data_int);
   }
-  ext_flash_close();
+  
   return PAYLOAD_SIZE;
 }
 
@@ -199,12 +193,22 @@ PROCESS_THREAD(runicast_process, ev, data)
   runicast_open(&runicast, 144, &runicast_callbacks);
 /* OPTIONAL: Sender history */
   list_init(history_table);
-  memb_init(&history_mem);  
+  memb_init(&history_mem);
 
+  int executed = ext_flash_open();
+  if(!executed) {
+    printf("Cannot open flash\n");
+    ext_flash_close();
+    return 0;
+  }
+  unsigned long start, end;
+  unsigned long timeElapsed;  
+  clock_init();
 /* Initalise code for data reading from flash */
   static int address_offset = 0;
   int pointer = EXT_FLASH_BASE_ADDR + address_offset;
   static int hasDataLoaded = NO_DATA;
+  start = clock_seconds();
   while(pointer < EXT_FLASH_SIZE) {
     static int payload[PAYLOAD_SIZE] = { 0 };
     static int payloadSize = 0;            
@@ -228,7 +232,10 @@ PROCESS_THREAD(runicast_process, ev, data)
       pointer = EXT_FLASH_BASE_ADDR + address_offset;
     }
   }
-  printf("Transfer done\n");
+  end = clock_seconds();
+  timeElapsed = (end - start);
+  ext_flash_close();
+  printf("Transfer done, time elapsed: %lu\n", end);
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
