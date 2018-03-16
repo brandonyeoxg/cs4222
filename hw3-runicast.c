@@ -56,8 +56,8 @@
 #define TRANSMISSION_DELAY  0.0001 * CLOCK_SECOND
 
 /* RCV addr */
-#define RCV_ADDR_0          88
-#define RCV_ADDR_1          0
+#define RCV_ADDR_0          154
+#define RCV_ADDR_1          7
 
 #define NO_DATA             0
 #define HAS_DATA            1
