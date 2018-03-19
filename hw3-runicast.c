@@ -48,7 +48,7 @@
 #include "dev/button-sensor.h"
 #include "dev/leds.h"
 
-#define MAX_RETRANSMISSIONS 4
+#define MAX_RETRANSMISSIONS 1000
 #define NUM_HISTORY_ENTRIES 4
 #define PAYLOAD_SIZE        12
 #define EXT_FLASH_BASE_ADDR 0
