@@ -52,12 +52,13 @@
 #define NUM_HISTORY_ENTRIES 4
 #define PAYLOAD_SIZE        12
 #define EXT_FLASH_BASE_ADDR 0
-#define EXT_FLASH_SIZE      32 * 1000
+#define EXT_FLASH_SIZE      32 * 1024
+#define CHUNK_SIZE          1024
 #define TRANSMISSION_DELAY  0.0001 * CLOCK_SECOND
 
 /* RCV addr */
-#define RCV_ADDR_0          154
-#define RCV_ADDR_1          7
+#define RCV_ADDR_0          179
+#define RCV_ADDR_1          130
 
 #define NO_DATA             0
 #define HAS_DATA            1
@@ -146,20 +147,19 @@ static struct runicast_conn runicast;
 /*---------------------------------------------------------------------------*/
 
 static int obtainPayload(int *address_offset, int *payload) {
-
-  int payloadIdx;
+  int chunkIdx;
   static int sensor_data_int[1];
-  for(payloadIdx = 0; payloadIdx < PAYLOAD_SIZE; ++payloadIdx) {
+  for(chunkIdx = 0; chunkIdx < CHUNK_SIZE; ++chunkIdx) {
     if(EXT_FLASH_BASE_ADDR + (*address_offset) >= EXT_FLASH_SIZE) {
       ext_flash_close();
-      return payloadIdx + 1;
+      return chunkIdx + 1;
     }
     ext_flash_read((*address_offset), sizeof(sensor_data_int),  (int *)&sensor_data_int);
-    *(payload + payloadIdx) = sensor_data_int[0];
+    *(payload + chunkIdx) = sensor_data_int[0];
     (*address_offset) += sizeof(sensor_data_int);
   }
   
-  return PAYLOAD_SIZE;
+  return CHUNK_SIZE;
 }
 
 static void sendPayload(struct runicast_conn *runicast, int numPayloadElement, int *payload) {
@@ -174,6 +174,35 @@ static void sendPayload(struct runicast_conn *runicast, int numPayloadElement, i
     //recv.u8[1],
     //numPayloadElement * sizeof(int));
     runicast_send(runicast, &recv, MAX_RETRANSMISSIONS);
+}
+
+static void sendChunkData(struct runicast_conn *runicast, int *hasDataLoaded, 
+    int *chunkData, int chunkSize, 
+    int *address_offset, int *pointer) {
+  int i = 0;
+
+  while(i < chunkSize) {
+    if(!runicast_is_transmitting(&runicast) && *hasDataLoaded == HAS_DATA) {
+// #ifdef DEBUG
+//       int k;
+//       printf("Payload size %d: PayloadData", payloadSize);
+//       for(k = 0; k < payloadSize; k++) {
+//         printf(" %d", payload[k]);
+//       }
+//       printf("\n");
+// #endif
+      int payloadSize = 0;
+      if (chunkSize - i < PAYLOAD_SIZE) {
+        payloadSize = PAYLOAD_SIZE;
+      } else {
+        payloadSize = chunkSize - i;
+      }
+      sendPayload(runicast, payloadSize, chunkData);
+      *hasDataLoaded = NO_DATA;
+      *pointer = EXT_FLASH_BASE_ADDR + *address_offset;
+      i += payloadSize; 
+    }
+  }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -210,27 +239,28 @@ PROCESS_THREAD(runicast_process, ev, data)
   static int hasDataLoaded = NO_DATA;
   start = clock_seconds();
   while(pointer < EXT_FLASH_SIZE) {
-    static int payload[PAYLOAD_SIZE] = { 0 };
-    static int payloadSize = 0;            
+    static int chunkData[CHUNK_SIZE] = { 0 };
+    static int chunkSize = 0;            
     if (hasDataLoaded == NO_DATA) {
-      payloadSize = obtainPayload(&address_offset, payload);
+      chunkSize = obtainPayload(&address_offset, chunkData);
       hasDataLoaded = HAS_DATA;
     }
     etimer_set(&et, TRANSMISSION_DELAY);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-    if(!runicast_is_transmitting(&runicast) && hasDataLoaded == HAS_DATA) {
-#ifdef DEBUG
-      int k;
-      printf("Payload size %d: PayloadData", payloadSize);
-      for(k = 0; k < payloadSize; k++) {
-        printf(" %d", payload[k]);
-      }
-      printf("\n");
-#endif
-      sendPayload(&runicast, payloadSize, payload);
-      hasDataLoaded = NO_DATA;
-      pointer = EXT_FLASH_BASE_ADDR + address_offset;
-    }
+    sendChunkData(&runicast, &hasDataLoaded, chunkData, chunkSize, &address_offset, &pointer);
+//     if(!runicast_is_transmitting(&runicast) && hasDataLoaded == HAS_DATA) {
+// // #ifdef DEBUG
+// //       int k;
+// //       printf("Payload size %d: PayloadData", payloadSize);
+// //       for(k = 0; k < payloadSize; k++) {
+// //         printf(" %d", payload[k]);
+// //       }
+// //       printf("\n");
+// // #endif
+//       sendPayload(&runicast, chunkSize, chunkData);
+//       hasDataLoaded = NO_DATA;
+//       pointer = EXT_FLASH_BASE_ADDR + address_offset;
+//     }
   }
   end = clock_seconds();
   timeElapsed = (end - start);
