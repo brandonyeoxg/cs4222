@@ -56,8 +56,8 @@
 #define TRANSMISSION_DELAY  0.0001 * CLOCK_SECOND
 
 /* RCV addr */
-#define RCV_ADDR_0          184
-#define RCV_ADDR_1          131
+#define RCV_ADDR_0          108
+#define RCV_ADDR_1          0
 
 #define NO_DATA             0
 #define HAS_DATA            1
@@ -183,17 +183,18 @@ PROCESS_THREAD(runicast_process, ev, data)
 
   PROCESS_BEGIN();
 
+  runicast_open(&runicast, 144, &runicast_callbacks);
+
+  list_init(history_table);
+  memb_init(&history_mem);
+
   /* Receiver node: do nothing */
   if(linkaddr_node_addr.u8[0] == RCV_ADDR_0 &&
      linkaddr_node_addr.u8[1] == RCV_ADDR_1) {
     PROCESS_WAIT_EVENT_UNTIL(0);
   }
 
-  static struct etimer et;
-  runicast_open(&runicast, 144, &runicast_callbacks);
 /* OPTIONAL: Sender history */
-  list_init(history_table);
-  memb_init(&history_mem);
 
   int executed = ext_flash_open();
   if(!executed) {
@@ -201,8 +202,8 @@ PROCESS_THREAD(runicast_process, ev, data)
     ext_flash_close();
     return 0;
   }
-  unsigned long start, end;
-  unsigned long timeElapsed;  
+  static unsigned long start, end;
+  static unsigned long timeElapsed;  
   clock_init();
 /* Initalise code for data reading from flash */
   static int address_offset = 0;
@@ -210,6 +211,7 @@ PROCESS_THREAD(runicast_process, ev, data)
   static int hasDataLoaded = NO_DATA;
   start = clock_seconds();
   while(pointer < EXT_FLASH_SIZE) {
+    static struct etimer et;
     static int payload[PAYLOAD_SIZE] = { 0 };
     static int payloadSize = 0;            
     if (hasDataLoaded == NO_DATA) {
@@ -235,7 +237,7 @@ PROCESS_THREAD(runicast_process, ev, data)
   end = clock_seconds();
   timeElapsed = (end - start);
   ext_flash_close();
-  printf("Transfer done, time elapsed: %lu\n", end);
+  printf("Transfer done, time elapsed: %lu\n", timeElapsed);
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
