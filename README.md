@@ -23,5 +23,5 @@ Brandon NodeID representation: `82.2`<br>
 ## Data collected
 Channel 15 W/ CSMA:
 1) 48 bytes => 11 seconds
-2) 8 bytes => 
-3) 100 bytes =>
+2) 8 bytes => 75 seconds
+3) 100 bytes => 17 seconds
