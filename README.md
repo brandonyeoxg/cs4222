@@ -19,3 +19,9 @@ rcv node 22406: `87.134` <br>
 rcv node 31748: `124.4` <br>
 
 Brandon NodeID representation: `82.2`<br>
+
+## Data collected
+Channel 15 W/ CSMA:
+1) 48 bytes => 12 seconds
+2) 8 bytes => 
+3) 100 bytes =>
