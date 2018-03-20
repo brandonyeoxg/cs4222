@@ -150,7 +150,7 @@ static int obtainPayload(int *address_offset, int *payload) {
   for(payloadIdx = 0; payloadIdx < PAYLOAD_SIZE/(sizeof(int)); ++payloadIdx) {
     if(EXT_FLASH_BASE_ADDR + (*address_offset) >= EXT_FLASH_SIZE) {
       ext_flash_close();
-      return payloadIdx + 1;
+      return (payloadIdx + 1) * 4;
     }
     ext_flash_read((*address_offset), sizeof(sensor_data_int),  (int *)&sensor_data_int);
     *(payload + payloadIdx) = sensor_data_int[0];
@@ -223,7 +223,7 @@ PROCESS_THREAD(runicast_process, ev, data)
 #ifdef DEBUGOFF
       int k;
       printf("Payload size %d: PayloadData", payloadSize);
-      for(k = 0; k < payloadSize; k++) {
+      for(k = 0; k < payloadSize/sizeof(int); k++) {
         printf(" %d", payload[k]);
       }
       printf("\n");
