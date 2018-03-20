@@ -48,7 +48,7 @@
 #include "dev/button-sensor.h"
 #include "dev/leds.h"
 
-#define MAX_RETRANSMISSIONS 1000
+#define MAX_RETRANSMISSIONS 10
 #define NUM_HISTORY_ENTRIES 4
 #define PAYLOAD_SIZE        12
 #define EXT_FLASH_BASE_ADDR 0
@@ -56,8 +56,8 @@
 #define TRANSMISSION_DELAY  0.0001 * CLOCK_SECOND
 
 /* RCV addr */
-#define RCV_ADDR_0          179
-#define RCV_ADDR_1          130
+#define RCV_ADDR_0          184
+#define RCV_ADDR_1          131
 
 #define NO_DATA             0
 #define HAS_DATA            1
