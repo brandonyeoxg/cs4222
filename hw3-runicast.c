@@ -50,9 +50,9 @@
 
 #define MAX_RETRANSMISSIONS 10
 #define NUM_HISTORY_ENTRIES 4
-#define PAYLOAD_SIZE        12
+#define PAYLOAD_SIZE        48 // Sizes in bytes => 50 bytes payload approx to 48 bytes, 10 bytes payload approc to 8 bytes
 #define EXT_FLASH_BASE_ADDR 0
-#define EXT_FLASH_SIZE      32 * 1000
+#define EXT_FLASH_SIZE      32 * 1024
 #define TRANSMISSION_DELAY  0.0001 * CLOCK_SECOND
 
 /* RCV addr */
@@ -114,10 +114,8 @@ recv_runicast(struct runicast_conn *c, const linkaddr_t *from, uint8_t seqno)
 
   // prints all the data
   int payloadSize = (packetbuf_datalen() / sizeof(int));
-  printf("packetbuf_datalen: %d", payloadSize);
   int i;
   int *payload = (int *)packetbuf_dataptr();
-  printf(" payload size %d:", payloadSize);
   for (i = 0; i < payloadSize; ++i) {
     if (i == payloadSize-1) { 
       printf(" %d\n", payload[i]);
@@ -149,7 +147,7 @@ static int obtainPayload(int *address_offset, int *payload) {
 
   int payloadIdx;
   static int sensor_data_int[1];
-  for(payloadIdx = 0; payloadIdx < PAYLOAD_SIZE; ++payloadIdx) {
+  for(payloadIdx = 0; payloadIdx < PAYLOAD_SIZE/(sizeof(int)); ++payloadIdx) {
     if(EXT_FLASH_BASE_ADDR + (*address_offset) >= EXT_FLASH_SIZE) {
       ext_flash_close();
       return payloadIdx + 1;
@@ -162,9 +160,9 @@ static int obtainPayload(int *address_offset, int *payload) {
   return PAYLOAD_SIZE;
 }
 
-static void sendPayload(struct runicast_conn *runicast, int numPayloadElement, int *payload) {
+static void sendPayload(struct runicast_conn *runicast, int sizeOfPayload, int *payload) {
     linkaddr_t recv;
-    packetbuf_copyfrom(payload, numPayloadElement * sizeof(int));
+    packetbuf_copyfrom(payload, sizeOfPayload);
     recv.u8[0] = RCV_ADDR_0;
     recv.u8[1] = RCV_ADDR_1;
     //printf("%u.%u: sending runicast to address %u.%u of size: %d\n",
@@ -205,6 +203,7 @@ PROCESS_THREAD(runicast_process, ev, data)
   static unsigned long start, end;
   static unsigned long timeElapsed;  
   clock_init();
+  // Starts the payload code? HERE
 /* Initalise code for data reading from flash */
   static int address_offset = 0;
   int pointer = EXT_FLASH_BASE_ADDR + address_offset;
@@ -212,7 +211,7 @@ PROCESS_THREAD(runicast_process, ev, data)
   start = clock_seconds();
   while(pointer < EXT_FLASH_SIZE) {
     static struct etimer et;
-    static int payload[PAYLOAD_SIZE] = { 0 };
+    static int payload[PAYLOAD_SIZE/sizeof(int)] = { 0 };
     static int payloadSize = 0;            
     if (hasDataLoaded == NO_DATA) {
       payloadSize = obtainPayload(&address_offset, payload);
@@ -221,7 +220,7 @@ PROCESS_THREAD(runicast_process, ev, data)
     etimer_set(&et, TRANSMISSION_DELAY);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
     if(!runicast_is_transmitting(&runicast) && hasDataLoaded == HAS_DATA) {
-#ifdef DEBUG
+#ifdef DEBUGOFF
       int k;
       printf("Payload size %d: PayloadData", payloadSize);
       for(k = 0; k < payloadSize; k++) {
