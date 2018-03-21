@@ -48,9 +48,9 @@
 #include "dev/button-sensor.h"
 #include "dev/leds.h"
 
-#define MAX_RETRANSMISSIONS 10
+#define MAX_RETRANSMISSIONS 1
 #define NUM_HISTORY_ENTRIES 4
-#define PAYLOAD_SIZE        48 // Sizes in bytes => 50 bytes payload approx to 48 bytes, 10 bytes payload approc to 8 bytes
+#define PAYLOAD_SIZE        100 // Sizes in bytes => 50 bytes payload approx to 48 bytes, 10 bytes payload approc to 8 bytes
 #define EXT_FLASH_BASE_ADDR 0
 #define EXT_FLASH_SIZE      32 * 1024
 #define TRANSMISSION_DELAY  0.0001 * CLOCK_SECOND
@@ -134,8 +134,8 @@ sent_runicast(struct runicast_conn *c, const linkaddr_t *to, uint8_t retransmiss
 static void
 timedout_runicast(struct runicast_conn *c, const linkaddr_t *to, uint8_t retransmissions)
 {
-  printf("runicast message timed out when sending to %d.%d, retransmissions %d\n",
-    to->u8[0], to->u8[1], retransmissions);
+  // printf("runicast message timed out when sending to %d.%d, retransmissions %d\n",
+  //   to->u8[0], to->u8[1], retransmissions);
 }
 static const struct runicast_callbacks runicast_callbacks = {recv_runicast,
   sent_runicast,
@@ -220,10 +220,10 @@ PROCESS_THREAD(runicast_process, ev, data)
     etimer_set(&et, TRANSMISSION_DELAY);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
     if(!runicast_is_transmitting(&runicast) && hasDataLoaded == HAS_DATA) {
-#ifdef DEBUGOFF
+#ifdef DEBUG
       int k;
       printf("Payload size %d: PayloadData", payloadSize);
-      for(k = 0; k < payloadSize/sizeof(int); k++) {
+      for(k = 0; k < payloadSize / sizeof(int); k++) {
         printf(" %d", payload[k]);
       }
       printf("\n");
