@@ -48,7 +48,7 @@
 #include "dev/button-sensor.h"
 #include "dev/leds.h"
 
-#define MAX_RETRANSMISSIONS 1
+#define MAX_RETRANSMISSIONS 4
 #define NUM_HISTORY_ENTRIES 4
 #define PAYLOAD_SIZE        48 // Sizes in bytes => 50 bytes payload approx to 48 bytes, 10 bytes payload approc to 8 bytes
 #define EXT_FLASH_BASE_ADDR 0
