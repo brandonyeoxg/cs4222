@@ -29,7 +29,7 @@ Channel 22 W/ CSMA <br>
 
 Channel 26 W/ CSMA <br>
 1) 48 bytes => 14 seconds<br>
-2) 8 bytes => 57 seconds<br>
+2) 8 bytes => <redo here><br>
 3) 100 bytes => 7 seconds<br>
 
 ## Data collected (Night)
