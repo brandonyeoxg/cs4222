@@ -50,7 +50,7 @@
 
 #define MAX_RETRANSMISSIONS 4
 #define NUM_HISTORY_ENTRIES 4
-#define PAYLOAD_SIZE        48 // Sizes in bytes => 50 bytes payload approx to 48 bytes, 10 bytes payload approc to 8 bytes
+#define PAYLOAD_SIZE        8 // Sizes in bytes => 50 bytes payload approx to 48 bytes, 10 bytes payload approc to 8 bytes
 #define EXT_FLASH_BASE_ADDR 0
 #define EXT_FLASH_SIZE      32 * 1024
 #define TRANSMISSION_DELAY  0.0001 * CLOCK_SECOND
