@@ -22,15 +22,19 @@ Brandon NodeID representation: `82.2`<br>
 
 ## Data collected (Morning)
 Channel 13 W/ CSMA:<br>
+1) 48 bytes => 14 seconds<br>
 
 Channel 22 W/ CSMA <br>
+1) 48 bytes => 14 seconds<br>
 
 Channel 26 W/ CSMA <br>
-1) 48 bytes => 14 seconds
+1) 48 bytes => 14 seconds<br>
+2) 8 bytes => 37 seconds<br>
+3) 100 bytes => 7 seconds<br>
 
 ## Data collected (Night)
 Channel 13 W/ CSMA:<br>
-1) 48 bytes => 17 seconds
+1) 48 bytes => 17 seconds<br>
 
 Channel 22 W/ CSMA <br>
 
