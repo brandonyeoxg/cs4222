@@ -1,1 +1,0 @@
-make TARGET=srf06-cc26xx BOARD=sensortag/cc2650 hw3-runicast.bin CPU_FAMILY=cc26xx
