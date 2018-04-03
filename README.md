@@ -6,7 +6,7 @@
 3) sudo apt-get install python-pip <br>
 4) sudo pip install paho-mqtt <br>
 
-### Main Files to look at
+### Main files to look at
 `main.py` is the entry point of the entire program. <br>
 `activity_detection.py` is the python file that governs the activity detection.<br>
 `mqtt_callback.py` is the python file that handles the use of callback mqtt.<br>
