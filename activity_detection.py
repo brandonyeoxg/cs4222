@@ -9,7 +9,7 @@ class ActivityState:
 class ActivityDetection: 
 	def __init__(self):
 		self.data = []
-		self.activityState = ACtivityState.IDLE
+		self.activityState = ActivityState.IDLE
 
 	def getActivityState(self):
 		return self.activityState
@@ -19,3 +19,6 @@ class ActivityDetection:
 
 	def compute(self):
 		pass
+
+	def getData(self):
+		return self.data
