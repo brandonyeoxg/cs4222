@@ -8,8 +8,8 @@
 
 ### Main files to look at
 `main.py` is the entry point of the entire program. <br>
-`activity_detection.py` governs the activity detection. <br>
-`walk_detection.py` detects if the person is walking or not. <br>
-`indoor_detection.py` detects if the person is indoor or not. <br>
-`floor_detection.py` detects if the person has changed floor or not. <br>
+`activity_detector.py` governs the activity detection. <br>
+`walk_detector.py` detects if the person is walking or not. <br>
+`indoor_detector.py` detects if the person is indoor or not. <br>
+`floor_detector.py` detects if the person has changed floor or not. <br>
 `mqtt_callback.py` handles the use of callback mqtt. <br>

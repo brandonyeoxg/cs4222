@@ -1,7 +1,7 @@
 import mqtt_callback as mqtt
-from activity_detection import ActivityDetection
+from activity_detector import ActivityDetector
 
-activity = ActivityDetection()
+activity = ActivityDetector()
 
 def on_connect(client, userdata, flags, rc):
 	print('Connected with result code ' + str(rc))
