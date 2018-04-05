@@ -23,3 +23,6 @@ if __name__ == '__main__':
 	print('Data len of the data: %d' % (len(activity.getData())))
 	for dataline in activity.getData():
 		print (dataline)
+
+	print('Check sanitised data')
+	activity.compute()
