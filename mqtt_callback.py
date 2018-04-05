@@ -1,4 +1,4 @@
-import paho.mqtt.client as mqtt
+import paho.mqtt.client as mqttz
 
 class DummyMsg:
 	def __init__(self, topic, payload):
