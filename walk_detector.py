@@ -1,6 +1,6 @@
 import numpy
 
-class StepCount:
+class WalkDetector:
 	IDLE = 0
 	WALKING = 1
 	gMin = 120
