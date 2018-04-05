@@ -13,7 +13,7 @@ class ActivityDetector:
 		self.activityState = {ActivityState.NO_FLOOR_CHANGE, ActivityState.INDOOR, ActivityState.IDLE}
 		self.prevActivityState = {ActivityState.NO_FLOOR_CHANGE, ActivityState.INDOOR, ActivityState.IDLE}
 		self.timeStamp = 0
-		self.newActivityChange = ActvityState.DUMMY
+		self.newActivityChange = ActivityState.DUMMY
 
 	def getActivityState(self):
 		return self.activityState
