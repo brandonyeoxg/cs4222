@@ -10,6 +10,7 @@ def on_connect(client, userdata, flags, rc):
 def on_message(client, userdata, msg):
 	print('[Topic %s] has payload: %s' % (msg.topic, str(msg.payload)))
 	activity.insertNewData(msg.payload)
+	activity.computeAndOutputIfActivityChanged()
 
 if __name__ == '__main__':
 	hostname = 'ocean.comp.nus.edu.sg'
