@@ -1,15 +1,22 @@
 # Project
 ## Setting Up
-### MQTT on python
-1) sudo apt-get install python-pkg-resources=3.3-1ubuntu1 <br>
-2) sudo apt-get install python-setuptools <br>
-3) sudo apt-get install python-pip <br>
-4) sudo pip install paho-mqtt <br>
+### Installing Java 8
+1) sudo apt-get install python-software-properties
+2) sudo add-apt-repository ppa:webupd8team/java
+3) sudo apt-get update
+4) sudo apt-get install oracle-java8-installer
+5) sudo gedit /etc/environment
+	* Add `JAVA_HOME="/usr/lib/jvm/java-8-oracle"` into the file 
+6) source /etc/environment
+	* Verify with `echo $JAVA_HOME` and `java -version`
 
 ### Main files to look at
-`main.py` is the entry point of the entire program. <br>
-`activity_detector.py` governs the activity detection. <br>
-`walk_detector.py` detects if the person is walking or not. <br>
-`indoor_detector.py` detects if the person is indoor or not. <br>
-`floor_detector.py` detects if the person has changed floor or not. <br>
-`mqtt_callback.py` handles the use of callback mqtt. <br>
+`MainApp.java` is the entry point of the entire program. <br>
+`ActivityDetector.java` governs the activity detection. <br>
+`WalkDetector.java` detects if the person is walking or not. <br>
+`IndoorDetector.java` detects if the person is indoor or not. <br>
+`FloorDetector.java` detects if the person has changed floor or not. <br>
+
+### Building the project
+To build the project we just need to run `./make_java` <br>
+After which we just `java MainApp` <br>
