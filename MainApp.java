@@ -26,11 +26,5 @@ public class MainApp {
 			System.out.println("Mqtt init problem!");
 			System.exit(-1);
 		}
-		
-
-		// MQTT code
-	}
-
-	public static void setupMqtt() {
 	}
 }
