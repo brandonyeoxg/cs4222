@@ -3,10 +3,11 @@ import math
 import logging, sys
 class Vector:
 	import math
-	def __init__(self, x = 0.0, y = 0.0, z = 0.0):
+	def __init__(self, x = 0.0, y = 0.0, z = 0.0, timestamp = 0.0):
 		self.x = x
 		self.y = y
 		self.z = z
+		self.timestamp = timestamp
 
 	def getMag(self):
 		return math.sqrt(math.pow(self.x, 2) + math.pow(self.y, 2) + math.pow(self.z, 2))
@@ -59,9 +60,18 @@ class Vector:
 
 	def div(self, vec):
 		result = Vector()
-		result.x = self.x / vec.x
-		result.y = self.y / vec.y
-		result.z = self.z / vec.z
+		if (vec.x == 0):
+			result.x = 0
+		else :
+			result.x = self.x / vec.x
+		if (vec.y == 0):
+			result.y = 0
+		else:
+			result.y = self.y / vec.y
+		if (vec.z == 0):
+			result.z = 0
+		else:
+			result.z = self.z / vec.z
 		return result 
 
 	def divConst(self, const):
@@ -77,43 +87,53 @@ class Vector:
 		return str('X: %f Y: %f Z: %f' % (self.x, self.y, self.z))
 
 class WalkDetector:
-	gMin = 20
-	gMax = 60
+	gMin = 120
+	gMax = 200
 	gOpt = 0
-	gAbsMin = 15
-	gAbsMax = 100
+	gAbsMin = 120
+	gAbsMax = 240
+	increment = 40
 
-	logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+	logging.basicConfig(stream = sys.stderr, level = logging.DEBUG)
 
 	def __init__(self, samples):
-		logging.info("Walk Detector")
-		self.samples = list(map(lambda x: Vector(x[0], x[1], x[2]), samples))
+		# logging.info("Walk Detector")
+		self.samples = list(map(lambda x: Vector(x[0], x[1], x[2], x[3]), samples))
 		logging.info('Total samples: %d' % (len(self.samples)))
+
+
 	def compute(self):
 		state = ActivityState.IDLE
 		numStepCtr = 0
+		numSteps = 0
+		logging.info("Begin computation")
 		for i in range(len(self.samples)):
 			highestCorrelation = self.getMaxCorrelation(i)
 			if (self.getAccelStdDevOfMag(self.samples, i, self.gOpt) < 0.01) is True:
 				state = ActivityState.IDLE
+				logging.info("[IDLE STATE] timestamp: %d" % (self.samples[i].timestamp))
+				numStepCtr = 0
 			elif (highestCorrelation.greaterThanConst(0.7)) is True:
 				state = ActivityState.WALKING
-				self.gMin = self.gOpt - 20
+				self.gMin = self.gOpt - self.increment
 				if (self.gMin < self.gAbsMin):
 					self.gMin = self.gAbsMin
-					self.gMax = self.gMin + 40
+					self.gMax = self.gMin + (self.increment * 2)
 				else:
-					self.gMax = self.gOpt + 20
+					self.gMax = self.gOpt + self.increment
 					if (self.gMax > self.gAbsMax):
 						self.gMax = self.gAbsMax
-						self.gMin = self.gMax - 40
+						self.gMin = self.gMax - (self.increment * 2)
 			if (state == ActivityState.IDLE):
 				continue
 			if (numStepCtr > self.gOpt / 2):
-				return ActivityState.WALKING;
+				numStepCtr = 0
+				numSteps += 1
+				logging.info("[WALK STATE] StepCount: %d Index:%d gOpt: %d" % (numSteps, i, self.gOpt))
+
 			numStepCtr += 1
 
-		return ActivityState.IDLE
+		return (ActivityState.IDLE,len(self.samples))
 
 	def getMaxCorrelation(self, m):
 		highestCorrelation = Vector()
@@ -145,7 +165,6 @@ class WalkDetector:
 		stdDevRightVec = self.getAccelStdDevFromTill(m + gamma, gamma)
 		denominatorVec = stdDevLeftVec.mult(stdDevRightVec)
 		denominatorVec = denominatorVec.multConst(gamma)
-
 		outputCorrelation = outputCorrelation.div(denominatorVec)
 
 		return outputCorrelation
@@ -190,6 +209,9 @@ class WalkDetector:
 		newSampleMagnitude = []
 		for k in range(windowSize):
 			targetIdx = fromIdx + k
+			if (targetIdx >= len(samples)):
+				break
+			# logging.info('TargetIdx: %d k: %d fromIdx: %d' % (targetIdx, k, fromIdx))
 			vecMag = samples[targetIdx].getMag()
 			newSampleMagnitude.append(vecMag)
 		stdDev = self.getStdDev(newSampleMagnitude)

@@ -4,13 +4,13 @@ from activity_detector import ActivityDetector
 activity = ActivityDetector()
 
 def on_connect(client, userdata, flags, rc):
-	print('Connected with result code ' + str(rc))
+	# print('Connected with result code ' + str(rc))
 	client.subscribe('#')
 
 def on_message(client, userdata, msg):
-	print('[Topic %s] has payload: %s' % (msg.topic, str(msg.payload)))
+	# print('[Topic %s] has payload: %s' % (msg.topic, str(msg.payload)))
 	activity.insertNewData(msg.payload)
-	activity.computeAndOutputIfActivityChanged()
+	# activity.computeAndOutputIfActivityChanged()
 
 if __name__ == '__main__':
 	hostname = 'ocean.comp.nus.edu.sg'
