@@ -9,4 +9,11 @@ public class ActivityDetector {
 		iDetector = new IndoorDetector();
 		wDetector = new WalkDetector();
 	}
+
+	public void compute() {
+		// This is for debug purposes now
+		System.out.println(fDetector.compute());
+		System.out.println(iDetector.compute());
+		System.out.println(wDetector.compute());
+	}
 }
