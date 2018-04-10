@@ -39,11 +39,14 @@ public class ActivityDetector {
 		curWalk = wDetector.compute(aList);
 
 		printIfChangeInActivityState(curFloor, curIndoor, curWalk);
+		// Clear our lists
+		flushLists();
 	}
 
 	public void consumeData(String mqttPayload) {
-		String[] tokens = mqttPayload.split(",");
-		ActivityData activityData = sanitisePayload(tokens);
+		String sanitisedPayload = sanitisePayload(mqttPayload);
+		String[] tokens = sanitisedPayload.split(",");
+		ActivityData activityData = sanitiseTokens(tokens);
 		switch(tokens[SENSOR_TYPE_FIELD]) {
 			case "a":
 				aList.add(activityData);
@@ -65,7 +68,16 @@ public class ActivityDetector {
 		}
 	}
 
-	private ActivityData sanitisePayload(String[] tokens) {
+	private String sanitisePayload(String payload) {
+		// Sample payload is
+		// {"value": "unicast message received from 82.2,518914,b,1006.56,,", "nodeid": "27648", "time": "2018-04-10T11:42:56.268125Z"}
+		int initialPos = payload.indexOf(',');
+		int lastPos = payload.indexOf('"', initialPos);
+		String sanitisedString = payload.substring(initialPos + 1, lastPos);
+		return sanitisedString;
+	}
+
+	private ActivityData sanitiseTokens(String[] tokens) {
 		int sizeOfData = tokens.length - 2;
 		ActivityData data = new ActivityData();
 		ArrayList<Float> payload = new ArrayList<Float>(sizeOfData);
@@ -91,5 +103,13 @@ public class ActivityDetector {
 
 	private void printActivityState(OutputState toBeOutput) {
 		System.out.printf("%d,%s\n", toBeOutput.timestamp, toBeOutput.activityState);
+	}
+
+	private void flushLists() {
+		aList.clear();
+		bList.clear();
+		tList.clear();
+		lList.clear();
+		hList.clear();
 	}
 }

@@ -1,0 +1,1 @@
+ python ./emulator.py --serialdevice /dev/ttyACM0 -f walk_1_prepro/data_collect_2018_03_20_13_52_12.csv

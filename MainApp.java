@@ -23,24 +23,26 @@ public class MainApp {
 		System.out.println("Hello");
 		final ActivityDetector detector = new ActivityDetector();
 
+		String payload = "{\"value\": \"unicast message received from 82.2,518914,b,1006.56,,\", \"nodeid\": \"27648\", \"time\": \"2018-04-10T11:42:56.268125Z\"}";
+		detector.consumeData(payload);
 		try {
 			MqttAsyncCallback mqtt = new MqttAsyncCallback(brokerUrl, clientId, cleanSession, quietMode, userName, password, detector);
 		// Compute after every x time
-			Runnable runnable = new Runnable() {
-				public void run() {
-					while(true) {
-						detector.compute();
-						try {
-							Thread.sleep(timeInterval);
-						} catch(InterruptedException e) {
-							e.printStackTrace();
-						}
-					}
-				}
-			};
+			// Runnable runnable = new Runnable() {
+			// 	public void run() {
+			// 		while(true) {
+			// 			detector.compute();
+			// 			try {
+			// 				Thread.sleep(timeInterval);
+			// 			} catch(InterruptedException e) {
+			// 				e.printStackTrace();
+			// 			}
+			// 		}
+			// 	}
+			// };
 
-			Thread thread = new Thread(runnable);
-			thread.start();			
+			// Thread thread = new Thread(runnable);
+			// thread.start();			
 			mqtt.subscribe(topic, qos);
 		} catch (MqttException me) {
 			System.out.println("Mqtt init problem!");
