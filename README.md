@@ -19,4 +19,6 @@
 
 ### Building the project
 To build the project we just need to run `./make_java` <br>
-After which we just `java MainApp` <br>
+
+### Running the project
+To run the project we just need to run `./run_java`. <br>
