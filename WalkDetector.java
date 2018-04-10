@@ -5,7 +5,7 @@ public class WalkDetector {
 		System.out.println("Hello WalkDetector here");
 	}
 
-	public String compute(ArrayList<ActivityData> accelData) {
-		return ActivityState.IDLE;
+	public OutputState compute(ArrayList<ActivityData> accelData) {
+		return new OutputState(-1, ActivityState.IDLE);
 	}
 }

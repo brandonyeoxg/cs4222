@@ -27,9 +27,9 @@ public class ActivityDetector {
 	}
 
 	public void compute() {
-		walkState = wDetector.compute(aList);
-		floorState = fDetector.compute(bList);
-		indoorState = iDetector.compute(tList, lList, hList);
+		// walkState = wDetector.compute(aList);
+		// floorState = fDetector.compute(bList);
+		// indoorState = iDetector.compute(tList, lList, hList);
 	}
 
 	public void consumeData(String mqttPayload) {
@@ -60,7 +60,7 @@ public class ActivityDetector {
 		int sizeOfData = tokens.length - 2;
 		ActivityData data = new ActivityData();
 		ArrayList<Float> payload = new ArrayList<Float>(sizeOfData);
-		data.timestamp = tokens[TIMESTAMP_FIELD];
+		data.timestamp = Integer.parseInt(tokens[TIMESTAMP_FIELD]);
 		data.data = payload;
 		return data;
 	}

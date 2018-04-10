@@ -5,7 +5,7 @@ public class FloorDetector {
 		System.out.println("Hello FloorDetector here");
 	}
 
-	public String compute(ArrayList<ActivityData> baroData) {
-		return ActivityState.NO_FLOOR_CHANGE;
+	public OutputState compute(ArrayList<ActivityData> baroData) {
+		return new OutputState(-1,ActivityState.NO_FLOOR_CHANGE);
 	}
 }
