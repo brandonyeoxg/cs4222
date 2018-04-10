@@ -31,6 +31,7 @@ public class ActivityDetector {
 	}
 
 	public void compute() {
+		System.out.println("Computing stuff");
 		OutputState curFloor, curIndoor, curWalk;
 
 		curFloor = fDetector.compute(bList);
