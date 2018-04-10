@@ -11,9 +11,9 @@ public class ActivityDetector {
 
 	private ArrayList<ActivityData> aList, bList, tList, lList, hList; 
 
-	private String floorState = ActivityState.NO_FLOOR_CHANGE;
-	private String indoorState = ActivityState.INDOOR;
-	private String walkState = ActivityState.IDLE;
+	private OutputState floorState;
+	private OutputState indoorState;
+	private OutputState walkState;
 
 	public ActivityDetector() {
 		System.out.println("Hello ActivityDetector here");
@@ -24,12 +24,20 @@ public class ActivityDetector {
 		aList = new ArrayList<ActivityData>(); // @ 20Hz
 		bList = new ArrayList<ActivityData>(); // @ 2 Hz
 		tList = new ArrayList<ActivityData>(); lList = new ArrayList<ActivityData>(); hList = new ArrayList<ActivityData>(); // @1 Hz
+
+		floorState = new OutputState(ActivityState.NOF_FLOOR_CHANGE);
+		indoorState = new OutputState(ActivityState.INDOOR);
+		walkState = new OutputState(ActivityState.IDLE);
 	}
 
 	public void compute() {
-		// walkState = wDetector.compute(aList);
-		// floorState = fDetector.compute(bList);
-		// indoorState = iDetector.compute(tList, lList, hList);
+		OutputState curFloor, curIndoor, curWalk;
+
+		curFloor = fDetector.compute(bList);
+		curIndoor = iDetector.compute(tList, lList, hList);
+		curWalk = wDetector.compute(aList);
+
+		printIfChangeInActivityState(curFloor, curIndoor, curWalk);
 	}
 
 	public void consumeData(String mqttPayload) {
@@ -63,5 +71,24 @@ public class ActivityDetector {
 		data.timestamp = Integer.parseInt(tokens[TIMESTAMP_FIELD]);
 		data.data = payload;
 		return data;
+	}
+
+	private void printIfChangeInActivityState(OutputState floor, OutputState indoor, OutputState walk) {
+		if (floorState.equals(floor) == false) {
+			printActivityState(floor);
+			floorState = floor;
+		}
+		if (indoorState.equals(indoor) == false) {
+			printActivityState(indoor);
+			indoorState = indoor;
+		}
+		if (walkState.equals(walkState) == false) {
+			printActivityState(walk);
+			walkState = walk;
+		}
+	}
+
+	private void printActivityState(OutputState toBeOutput) {
+		System.out.printf("%d,%s\n", toBeOutput.timestamp, toBeOutput.activityState);
 	}
 }
