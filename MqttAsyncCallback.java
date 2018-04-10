@@ -36,6 +36,8 @@ public class MqttAsyncCallback implements MqttCallback {
 	private String 				password;
 	private String 				userName;
 
+	private ActivityDetector detector = null;
+
 	/**
 	 * Constructs an instance of the sample client wrapper
 	 * @param brokerUrl the url to connect to
@@ -47,12 +49,13 @@ public class MqttAsyncCallback implements MqttCallback {
 	 * @throws MqttException
 	 */
     public MqttAsyncCallback(String brokerUrl, String clientId, boolean cleanSession,
-    		boolean quietMode, String userName, String password) throws MqttException {
+    		boolean quietMode, String userName, String password, ActivityDetector detector) throws MqttException {
 		this.brokerUrl = brokerUrl;
 		this.quietMode = quietMode;
 		this.clean 	   = cleanSession;
 		this.password = password;
 		this.userName = userName;
+		this.detector = detector;
     	//This sample stores in a temporary directory... where messages temporarily
     	// stored until the message has been delivered to the server.
     	//..a real application ought to store them somewhere
@@ -263,6 +266,8 @@ public class MqttAsyncCallback implements MqttCallback {
                            "  Topic:\t" + topic +
                            "  Message:\t" + new String(message.getPayload()) +
                            "  QoS:\t" + message.getQos());
+
+		detector.consumeData(new String(message.getPayload()));
 	}
 
 	/****************************************************************/

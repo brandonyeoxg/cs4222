@@ -11,8 +11,10 @@ import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
 public class MainApp {
 	private static final String password = "fUDqUGVy0XAjftpC";
 	private static final String userName = "cs4222.team13@gmail.com";
-	private static final String brokerUrl = "ocean.comp.nus.edu.sg";
+	private static final String brokerUrl = "tcp://ocean.comp.nus.edu.sg:1883";
 	private static final String clientId = "";
+	private static final String topic = "#";
+	private static final int qos = 2;
 	private static final boolean cleanSession = true;
 	private static final boolean quietMode = true;
 	private static final long timeInterval = 1000;
@@ -22,10 +24,14 @@ public class MainApp {
 		ActivityDetector detector = new ActivityDetector();
 
 		try {
-			MqttAsyncCallback mqtt = new MqttAsyncCallback(brokerUrl, clientId, cleanSession, quietMode, userName, password);	
+			MqttAsyncCallback mqtt = new MqttAsyncCallback(brokerUrl, clientId, cleanSession, quietMode, userName, password, detector);
+			mqtt.subscribe(topic, qos);
 		} catch (MqttException me) {
 			System.out.println("Mqtt init problem!");
 			System.exit(-1);
+		} catch(Throwable t) {
+			System.out.println("Throwable caught "+ t);
+			t.printStackTrace();			
 		}
 
 		// Compute after every x time
