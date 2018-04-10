@@ -15,6 +15,7 @@ public class MainApp {
 	private static final String clientId = "";
 	private static final boolean cleanSession = true;
 	private static final boolean quietMode = true;
+	private static final long timeInterval = 1000;
 
 	public static void main(String args[]) {
 		System.out.println("Hello");
@@ -26,5 +27,22 @@ public class MainApp {
 			System.out.println("Mqtt init problem!");
 			System.exit(-1);
 		}
+
+		// Compute after every x time
+		Runnable runnable = new Runnable() {
+			public void run() {
+				while(true) {
+					detector.compute();
+					try {
+						Thread.sleep(timeInterval);
+					} catch(InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		};
+
+		Thread thread = new Thread(runnable);
+		thread.start();
 	}
 }

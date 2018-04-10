@@ -25,7 +25,7 @@ public class ActivityDetector {
 		bList = new ArrayList<ActivityData>(); // @ 2 Hz
 		tList = new ArrayList<ActivityData>(); lList = new ArrayList<ActivityData>(); hList = new ArrayList<ActivityData>(); // @1 Hz
 
-		floorState = new OutputState(ActivityState.NOF_FLOOR_CHANGE);
+		floorState = new OutputState(ActivityState.NO_FLOOR_CHANGE);
 		indoorState = new OutputState(ActivityState.INDOOR);
 		walkState = new OutputState(ActivityState.IDLE);
 	}
