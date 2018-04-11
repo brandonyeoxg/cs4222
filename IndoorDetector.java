@@ -70,6 +70,7 @@ public class IndoorDetector {
         // totalConfidence is how confident are you in saying that it is in indoor.
         totalConfidence = getSumOfArrayList(predictIndoor);
         int timestamp = getMeanTimeStamp(tempList, lightList, humidList);
+//        System.out.println("Time Stamp is: " + timestamp);
         if (timestamp != -1) {
             if (totalConfidence > CONFIDENCE_LEVEL_THRESHOLD) {
                 return new OutputState(timestamp, ActivityState.INDOOR);
@@ -78,7 +79,7 @@ public class IndoorDetector {
             }
         } else { 
 	    return new OutputState(-1, ActivityState.INDOOR);	
-	}
+        }
     }
     private float computeConfidenceLevel(float reading, float threshold) {
         return Math.abs((threshold - reading) / threshold);
@@ -95,13 +96,13 @@ public class IndoorDetector {
         int answer = 0;
         if (totalNumberOfElements != 0) {
             for (int i = 0; i < tempList.size(); i++) {
-                answer += tempList.get(i).data.get(0);
+                answer += tempList.get(i).timestamp;
             }
             for (int j = 0; j < lightList.size(); j++) {
-                answer += lightList.get(j).data.get(0);
+                answer += lightList.get(j).timestamp;
             }
             for (int k = 0; k < humidList.size(); k++) {
-                answer += humidList.get(k).data.get(0);
+                answer += humidList.get(k).timestamp;
             }
             return Math.round(answer / totalNumberOfElements);
         } else {
