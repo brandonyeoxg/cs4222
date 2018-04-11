@@ -8,6 +8,10 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
 
+import java.io.File;
+import java.util.Scanner;
+
+
 public class MainApp {
 	private static final String password = "fUDqUGVy0XAjftpC";
 	private static final String userName = "cs4222.team13@gmail.com";
@@ -20,29 +24,29 @@ public class MainApp {
 	private static final long timeInterval = 1000;
 
 	public static void main(String args[]) {
-		System.out.println("Hello");
-		final ActivityDetector detector = new ActivityDetector();
+		// realExecution();
+	}
 
-		String payload = "{\"value\": \"unicast message received from 82.2,518914,b,1006.56,,\", \"nodeid\": \"27648\", \"time\": \"2018-04-10T11:42:56.268125Z\"}";
-		detector.consumeData(payload);
+	private static void realExecution() {
+		final ActivityDetector detector = new ActivityDetector();
 		try {
 			MqttAsyncCallback mqtt = new MqttAsyncCallback(brokerUrl, clientId, cleanSession, quietMode, userName, password, detector);
-		// Compute after every x time
-			// Runnable runnable = new Runnable() {
-			// 	public void run() {
-			// 		while(true) {
-			// 			detector.compute();
-			// 			try {
-			// 				Thread.sleep(timeInterval);
-			// 			} catch(InterruptedException e) {
-			// 				e.printStackTrace();
-			// 			}
-			// 		}
-			// 	}
-			// };
+			// Compute after every x time
+			Runnable runnable = new Runnable() {
+				public void run() {
+					while(true) {
+						detector.compute();
+						try {
+							Thread.sleep(timeInterval);
+						} catch(InterruptedException e) {
+							e.printStackTrace();
+						}
+					}
+				}
+			};
 
-			// Thread thread = new Thread(runnable);
-			// thread.start();			
+			Thread thread = new Thread(runnable);
+			thread.start();			
 			mqtt.subscribe(topic, qos);
 		} catch (MqttException me) {
 			System.out.println("Mqtt init problem!");
@@ -50,6 +54,30 @@ public class MainApp {
 		} catch(Throwable t) {
 			System.out.println("Throwable caught "+ t);
 			t.printStackTrace();			
+		}		
+	}
+
+	private static void testExecution() {
+		final ActivityDetector detector = new ActivityDetector();
+		final String testfile = "testdata.csv";
+
+		try {
+			File file = new File(testfile);
+			Scanner sc = new Scanner(file);
+
+			while (sc.hasNextLine()) {
+				for (int i = 0; i < 25; ++i) { // Read 25 lines since 1 second we will have 25 data points
+					String line = sc.nextLine();
+
+					detector.consumeData(line);
+					if (sc.hasNextLine() == false) {
+						break;
+					}
+				}
+				detector.compute();
+			}			
+		} catch(Exception e) {
+			e.printStackTrace();
 		}
 	}
 }
