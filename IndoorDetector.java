@@ -1,14 +1,14 @@
 import java.util.ArrayList;
 
 public class IndoorDetector {
-    public static final float CONFIDENCE_LEVEL_THRESHOLD = 0.50;
-    public static final float INDOOR_LIGHT_THRESHOLD = 70.0;
-    public static final float OUTDOOR_LIGHT_THRESHOLD = 2000.0;
-    public static final float HUMID_THRESHOLD = 70.0;
-    public static final float TEMPERATURE_THRESHOLD = 24.0;
-    public static final float LIGHT_WEIGHTING = 0.6;
-    public static final float TEMP_WEIGHTING = 0.2;
-    public static final float HUMID_WEIGHTING = 0.2;
+    public static final float CONFIDENCE_LEVEL_THRESHOLD = 0.50f;
+    public static final float INDOOR_LIGHT_THRESHOLD = 70.0f;
+    public static final float OUTDOOR_LIGHT_THRESHOLD = 2000.0f;
+    public static final float HUMID_THRESHOLD = 70.0f;
+    public static final float TEMPERATURE_THRESHOLD = 24.0f;
+    public static final float LIGHT_WEIGHTING = 0.6f;
+    public static final float TEMP_WEIGHTING = 0.2f;
+    public static final float HUMID_WEIGHTING = 0.2f;
     
     public IndoorDetector() {
         System.out.println("Hello IndoorDetector here");

@@ -60,7 +60,7 @@ public class MainApp {
 
 	private static void testExecution() {
 		final ActivityDetector detector = new ActivityDetector();
-		final String testfile = "test_converted.csv";
+		final String testfile = "walk_1_Addition.csv";
 
 		try {
 			File file = new File(testfile);
