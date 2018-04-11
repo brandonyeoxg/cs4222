@@ -16,10 +16,10 @@ public class IndoorDetector {
     
     public OutputState compute(ArrayList<ActivityData> tempList, ArrayList<ActivityData> lightList, ArrayList<ActivityData> humidList) {
     // Using weighted sum to calculate confidence level (lightData = 0.6, tempData = 0.2, humidData = 0.2)
-        float tempConfidence;
-        float lightConfidence;
-        float humidConfidence;
-        float totalConfidence;
+        float tempConfidence = 0.0f;
+        float lightConfidence = 0.0f;
+        float humidConfidence = 0.0f;
+        float totalConfidence = 0.0f;
 
         ArrayList<OutputState> confirmedResults = new ArrayList<OutputState>();
         
@@ -76,7 +76,9 @@ public class IndoorDetector {
             } else {
                 return new OutputState(timestamp, ActivityState.OUTDOOR);
             }
-        }
+        } else { 
+	    return new OutputState(-1, ActivityState.INDOOR);	
+	}
     }
     private float computeConfidenceLevel(float reading, float threshold) {
         return Math.abs((threshold - reading) / threshold);
