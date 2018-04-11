@@ -93,8 +93,10 @@ public class ActivityDetector {
 			floorState = floor;
 		}
 		if (indoorState.equals(indoor) == false) {
-			printActivityState(indoor);
-			indoorState = indoor;
+			if (indoor.timestamp != -1) { 
+				printActivityState(indoor);
+				indoorState = indoor;
+			}
 		}
 		if (walkState.equals(walkState) == false) {
 			printActivityState(walk);
