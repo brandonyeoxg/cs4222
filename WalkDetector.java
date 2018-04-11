@@ -2,28 +2,7 @@ import java.util.ArrayList;
 import java.lang.Math;
 
 public class WalkDetector {
-	private int gMin, gMax, gOpt, gAbsMin, gAbsMax;
-	private String state = ActivityState.IDLE;
-
-	public WalkDetector() {
-		gMin = 120;
-		gMax = 200;
-		gOpt = 0;
-		gAbsMin = 120;
-		gAbsMax = 240;
-
-		state = ActivityState.IDLE;
-	}
-
-	public OutputState compute(ArrayList<ActivityData> accelData) {
-		for (int i = 0; i < accelData.size(); ++i) {
-
-		}
-
-		return new OutputState(-1, ActivityState.IDLE);
-	}
-
-	private class Vector {
+private class Vector {
 		public float x, y, z;
 		public long timestamp;
 
@@ -33,12 +12,12 @@ public class WalkDetector {
 			this.z = z;
 		}
 
-		public Vector(ArrayList<Float> data, long timestamp) {
-			this.timestamp = timestamp;
+		public Vector(ActivityData ad) {
+			this.timestamp = ad.timestamp;
 
-			x = data.get(0);
-			y = data.get(1);
-			z = data.get(2);
+			this.x = ad.data.get(0);
+			this.y = ad.data.get(1);
+			this.z = ad.data.get(2);
 		}
 
 		public Vector add(Vector vec) {
@@ -117,7 +96,60 @@ public class WalkDetector {
 		}
 	}
 
-	public Vector getHighestCorrelation(Vector left, Vector right) {
+	private int gMin, gMax, gOpt, gAbsMin, gAbsMax, gInterval;
+	private String state = ActivityState.IDLE;
+	private ArrayList<Vector> samples;
+
+	public WalkDetector() {
+		gMin = 120;
+		gMax = 200;
+		gOpt = 0;
+		gAbsMin = 120;
+		gAbsMax = 240;
+		gInterval = 20;
+
+		state = ActivityState.IDLE;
+
+		samples = new ArrayList<Vector>();
+	}
+
+	public OutputState compute(ArrayList<ActivityData> accelData) {
+		// Convert into vector
+		for (int i = 0; i < accelData.size(); ++i) {
+			Vector vec = new Vector(accelData.get(i));
+			this.samples.add(vec);
+		}
+
+		return new OutputState(-1, ActivityState.IDLE);
+	}
+
+	//private Vector getMaxCorrelation(ArrayList<ActivityData> accelData);
+
+	private float getStdDevOfAccelMag(int fromIdx, int windowSize) {
+		ArrayList<Float> sampleMagnitudes = new ArrayList<Float>(windowSize);
+
+		for (int k = 0; k < windowSize; ++k) {
+			int targetIdx = fromIdx + k;
+			sampleMagnitudes.add(this.samples.get(targetIdx).getMag());
+		}
+		return getStdDev(sampleMagnitudes);
+	}
+
+	private void handleGammaWindowShift() {
+		this.gMin = this.gOpt - this.gInterval;
+		if (this.gMin < this.gAbsMin) {
+			this.gMin = this.gAbsMin;
+			this.gMax = this.gMin + (this.gInterval * 2);
+		} else {
+			this.gMax = this.gOpt + this.gInterval;
+			if (this.gMax > this.gAbsMax) {
+				this.gMax = this.gAbsMax;
+				this.gMin = this.gMax - (this.gInterval * 2);
+			}
+		}
+	}
+
+	private Vector getHighestCorrelation(Vector left, Vector right) {
 		float leftSum = left.x + left.y + left.z;
 		float rightSum = right.x + right.y + right.z;
 		if (leftSum > rightSum) {
@@ -125,4 +157,25 @@ public class WalkDetector {
 		}
 		return right;
 	}	
+
+	private float getStdDev(ArrayList<Float> samples) {
+		float mean = getMean(samples);
+		float stdDev = 0;
+		for (int i = 0; i < samples.size(); ++i) {
+			stdDev += Math.pow(samples.get(i) - mean, 2);
+		}
+		stdDev = (float)Math.sqrt(stdDev / samples.size());
+		return stdDev;
+	}
+
+	private float getMean(ArrayList<Float> samples) {
+		if (samples.size() < 1) {
+			System.exit(-1);
+		}
+		float output = 0;
+		for (int i = 0 ; i < samples.size(); ++i) {
+			output += samples.get(i);
+		}
+		return output / samples.size();
+	}
 }

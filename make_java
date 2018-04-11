@@ -1,1 +1,1 @@
-javac -cp ".:jars/org.eclipse.paho.client.mqttv3_1.1.0.jar" *.java
+javac -Xlint -cp ".:jars/org.eclipse.paho.client.mqttv3_1.1.0.jar" *.java

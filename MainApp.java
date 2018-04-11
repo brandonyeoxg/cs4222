@@ -25,6 +25,7 @@ public class MainApp {
 
 	public static void main(String args[]) {
 		// realExecution();
+		testExecution();
 	}
 
 	private static void realExecution() {
@@ -59,7 +60,7 @@ public class MainApp {
 
 	private static void testExecution() {
 		final ActivityDetector detector = new ActivityDetector();
-		final String testfile = "testdata.csv";
+		final String testfile = "test_converted.csv";
 
 		try {
 			File file = new File(testfile);
