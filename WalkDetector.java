@@ -10,6 +10,8 @@ private class Vector {
 			this.x = x;
 			this.y = y;
 			this.z = z;
+
+			this.timestamp = 0;
 		}
 
 		public Vector(ActivityData ad) {
@@ -123,7 +125,97 @@ private class Vector {
 		return new OutputState(-1, ActivityState.IDLE);
 	}
 
-	//private Vector getMaxCorrelation(ArrayList<ActivityData> accelData);
+	private Vector getMaxCorrelation(ArrayList<Vector> accelData, int fromIdx) {
+		Vector highestCorrelation = new Vector(0,0,0);
+		int highestGamma = this.gMin;
+		for (int gamma = this.gMin; gamma < this.gMax; ++gamma) {
+			if (fromIdx + gamma + gamma >= accelData.size()) {
+				break;
+			}
+			Vector correlation = getAutoCorrelation(accelData, fromIdx, gamma);
+			highestCorrelation = getHighestCorrelation(highestCorrelation, correlation);
+			if (highestCorrelation.equals(correlation)) {
+				highestGamma = gamma;
+			}
+		}
+		this.gOpt = highestGamma;
+		return highestCorrelation;
+	}
+
+	private Vector getAutoCorrelation(ArrayList<Vector> accelData, int m, int gamma) {
+		Vector outputCorrelation = new Vector(0, 0, 0);
+		for (int k = 0; k < gamma; ++k) {
+			if (m + k + gamma >= accelData.size()) {
+				break;
+			}
+
+			Vector meanVec = getAccelMeanFromTill(m, gamma);
+			Vector left = this.samples.get(m + k).minus(meanVec);
+
+			meanVec = getAccelMeanFromTill(m + gamma, gamma);
+			Vector right = this.samples.get(m + k + gamma).minus(meanVec);
+
+			Vector result = left.mult(right);
+			outputCorrelation = outputCorrelation.add(result);
+		}
+
+		Vector stdDevLeftVec = getAccelStdDevFromTill(m, gamma);
+		Vector stdDevRightVec = getAccelStdDevFromTill(m, gamma);
+
+		Vector denominatorVec = stdDevLeftVec.mult(stdDevRightVec);
+		denominatorVec = denominatorVec.multConst(gamma);
+
+		outputCorrelation = outputCorrelation.div(denominatorVec);
+		return outputCorrelation;
+	}
+
+	private Vector getAccelMean(ArrayList<Vector> dataSets, int gamma) {
+		float x = 0.0f, y = 0.0f, z = 0.0f;
+		for (int i = 0; i < gamma; ++i) {
+			x += dataSets.get(i).x;
+			y += dataSets.get(i).y;
+			z += dataSets.get(i).z;
+		}
+		Vector outputVec = new Vector(x / gamma, y / gamma, z / gamma);
+		return outputVec;
+	}
+
+	private Vector getAccelStdDev(ArrayList<Vector> dataSets, int gamma) {
+		Vector meanVec = getAccelMean(dataSets, gamma);
+		Vector stdDevVec = new Vector(0.0f, 0.0f, 0.0f);
+		for(int i = 0; i < gamma; ++i) {
+			stdDevVec.x += Math.pow(dataSets.get(i).x - meanVec.x, 2);
+			stdDevVec.y += Math.pow(dataSets.get(i).y - meanVec.y, 2);
+			stdDevVec.z += Math.pow(dataSets.get(i).z - meanVec.z, 2);
+		}
+
+		stdDevVec.x = (float) Math.sqrt(stdDevVec.x / gamma);
+		stdDevVec.y = (float) Math.sqrt(stdDevVec.y / gamma);
+		stdDevVec.z = (float) Math.sqrt(stdDevVec.z / gamma);
+		
+		return stdDevVec;
+	}
+
+	private Vector getAccelMeanFromTill(int m, int gamma) {
+		ArrayList<Vector> newSample = new ArrayList<Vector>(gamma);
+		for (int i = 0; i < gamma; ++i) {
+			int targetIdx = m + i;
+			newSample.add(this.samples.get(targetIdx));
+		}
+		Vector outputMeanVec = getAccelMean(newSample, gamma);
+		return outputMeanVec;
+	}
+
+	private Vector getAccelStdDevFromTill(int m, int gamma) {
+		ArrayList<Vector> newSample = new ArrayList<Vector>(gamma);
+		for(int i = 0; i < gamma; ++i) {
+			int targetIdx = m + i;
+			newSample.add(this.samples.get(targetIdx));
+		}
+
+		Vector outputStdDevVec = getAccelStdDev(newSample, gamma);
+		return outputStdDevVec;
+	}
 
 	private float getStdDevOfAccelMag(int fromIdx, int windowSize) {
 		ArrayList<Float> sampleMagnitudes = new ArrayList<Float>(windowSize);
