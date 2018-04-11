@@ -81,6 +81,9 @@ public class ActivityDetector {
 		int sizeOfData = tokens.length - 2;
 		ActivityData data = new ActivityData();
 		ArrayList<Float> payload = new ArrayList<Float>(sizeOfData);
+		for (int i = 0; i < sizeOfData; ++i) {
+			payload.add(Float.parseFloat(tokens[i + SENSOR_TYPE_FIELD + 1]));
+		}
 		data.timestamp = Integer.parseInt(tokens[TIMESTAMP_FIELD]);
 		data.data = payload;
 		return data;
