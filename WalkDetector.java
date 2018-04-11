@@ -103,12 +103,12 @@ private class Vector {
 	private ArrayList<Vector> samples;
 
 	public WalkDetector() {
-		gMin = 120;
-		gMax = 200;
+		gMin = 10;
+		gMax = 15;
 		gOpt = 0;
-		gAbsMin = 120;
-		gAbsMax = 240;
-		gInterval = 20;
+		gAbsMin = 5;
+		gAbsMax = 20;
+		gInterval = 5;
 
 		state = ActivityState.IDLE;
 
@@ -122,17 +122,38 @@ private class Vector {
 			this.samples.add(vec);
 		}
 
+		int numStepsCtr = 0;
+		for (int i = 0; i < this.samples.size(); ++i) {
+			if (i + this.gOpt + this.gOpt > this.samples.size()) {
+				return new OutputState(-1, ActivityState.IDLE);
+			}			
+			Vector highestCorrelation = getMaxCorrelation(i);
+			if (getStdDevOfAccelMag(i, this.gOpt) < 0.01f) {
+				state = ActivityState.IDLE;
+				numStepsCtr = 0;
+			} else if (highestCorrelation.moreThan(0.7f)) {
+				state = ActivityState.WALK;
+				handleGammaWindowShift();
+			}
+			if (state == ActivityState.IDLE) {
+				continue;
+			}
+			if (numStepsCtr > this.gOpt / 2) {
+				return new OutputState(accelData.get(0).timestamp, ActivityState.WALK);
+			}
+		}
+
 		return new OutputState(-1, ActivityState.IDLE);
 	}
 
-	private Vector getMaxCorrelation(ArrayList<Vector> accelData, int fromIdx) {
+	private Vector getMaxCorrelation(int fromIdx) {
 		Vector highestCorrelation = new Vector(0,0,0);
 		int highestGamma = this.gMin;
 		for (int gamma = this.gMin; gamma < this.gMax; ++gamma) {
-			if (fromIdx + gamma + gamma >= accelData.size()) {
+			if (fromIdx + gamma >= this.samples.size()) {
 				break;
 			}
-			Vector correlation = getAutoCorrelation(accelData, fromIdx, gamma);
+			Vector correlation = getAutoCorrelation(this.samples, fromIdx, gamma);
 			highestCorrelation = getHighestCorrelation(highestCorrelation, correlation);
 			if (highestCorrelation.equals(correlation)) {
 				highestGamma = gamma;
@@ -145,7 +166,7 @@ private class Vector {
 	private Vector getAutoCorrelation(ArrayList<Vector> accelData, int m, int gamma) {
 		Vector outputCorrelation = new Vector(0, 0, 0);
 		for (int k = 0; k < gamma; ++k) {
-			if (m + k + gamma >= accelData.size()) {
+			if (m + k + gamma + gamma >= accelData.size()) {
 				break;
 			}
 
