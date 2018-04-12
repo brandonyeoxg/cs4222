@@ -41,6 +41,28 @@ public class ActivityDetector {
 		flushLists();
 	}
 
+	public void printLists() {
+		System.out.println("Printing out light data: ");
+		for (ActivityData d : lList) {
+			System.out.println("Timestamp: " + d.timestamp + " Data: " + d.data.get(0));
+		}
+		
+		System.out.println("Printing out humid data: ");
+		for (ActivityData d : hList) {
+			System.out.println("Timestamp: " + d.timestamp + " Data: " + d.data.get(0));
+		}
+
+		System.out.println("Printing out temp data: ");
+		for (ActivityData d : tList) {
+			System.out.println("Timestamp: " + d.timestamp + " Data: " + d.data.get(0));
+		}
+
+		System.out.println("Printing out baro data: ");
+		for (ActivityData d : bList) {
+			System.out.println("Timestamp: " + d.timestamp + " Data: " + d.data.get(0));
+		}				
+	}
+
 	public void consumeData(String mqttPayload) {
 		String sanitisedPayload = sanitisePayload(mqttPayload);
 		String[] tokens = sanitisedPayload.split(",");
