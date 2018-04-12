@@ -103,12 +103,12 @@ private class Vector {
 	private ArrayList<Vector> samples;
 
 	public WalkDetector() {
-		gMin = 10;
-		gMax = 15;
+		gMin = 20;
+		gMax = 80;
 		gOpt = 0;
-		gAbsMin = 5;
-		gAbsMax = 20;
-		gInterval = 5;
+		gAbsMin = 40;
+		gAbsMax = 100;
+		gInterval = 10;
 
 		state = ActivityState.IDLE;
 
@@ -123,6 +123,7 @@ private class Vector {
 		}
 
 		int numStepsCtr = 0;
+		int stepCount = 0;
 		for (int i = 0; i < this.samples.size(); ++i) {
 			if (i + this.gOpt + this.gOpt > this.samples.size()) {
 				return new OutputState(-1, ActivityState.IDLE);
@@ -131,7 +132,10 @@ private class Vector {
 			if (getStdDevOfAccelMag(i, this.gOpt) < 0.01f) {
 				state = ActivityState.IDLE;
 				numStepsCtr = 0;
+				System.out.println("Timestamp: " + this.samples.get(i).timestamp + " Steps Idle" + " gOpt: " + this.gOpt);
+
 			} else if (highestCorrelation.moreThan(0.7f)) {
+				System.out.println("Timestamp: " + this.samples.get(i).timestamp + " Steps Walked: " + stepCount + " gOpt: " + this.gOpt);
 				state = ActivityState.WALK;
 				handleGammaWindowShift();
 			}
@@ -139,8 +143,12 @@ private class Vector {
 				continue;
 			}
 			if (numStepsCtr > this.gOpt / 2) {
-				return new OutputState(accelData.get(0).timestamp, ActivityState.WALK);
+				// return new OutputState(accelData.get(0).timestamp, ActivityState.WALK);
+				numStepsCtr = 0;
+				stepCount += 1;
+				
 			}
+			numStepsCtr += 1;
 		}
 
 		return new OutputState(-1, ActivityState.IDLE);

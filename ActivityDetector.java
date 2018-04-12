@@ -34,11 +34,15 @@ public class ActivityDetector {
 
 		curFloor = fDetector.compute(bList);
 		curIndoor = iDetector.compute(tList, lList, hList);
-		curWalk = wDetector.compute(aList);
+		//curWalk = wDetector.compute(aList);
 
-		printIfChangeInActivityState(curFloor, curIndoor, curWalk);
+		printIfChangeInActivityState(curFloor, curIndoor, new OutputState(-1, ActivityState.IDLE));
 		// Clear our lists
 		flushLists();
+	}
+
+	public void computeWalk() {
+		wDetector.compute(aList);
 	}
 
 	public void consumeData(String mqttPayload) {
@@ -107,7 +111,7 @@ public class ActivityDetector {
 	}
 
 	private void flushLists() {
-		aList.clear();
+		//aList.clear();
 		bList.clear();
 		tList.clear();
 		lList.clear();
