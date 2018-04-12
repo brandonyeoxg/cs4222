@@ -34,15 +34,37 @@ public class ActivityDetector {
 
 		curFloor = fDetector.compute(bList);
 		curIndoor = iDetector.compute(tList, lList, hList);
-		//curWalk = wDetector.compute(aList);
+		curWalk = wDetector.compute(aList);
 
-		printIfChangeInActivityState(curFloor, curIndoor, new OutputState(-1, ActivityState.IDLE));
+		printIfChangeInActivityState(new OutputState(-1, ActivityState.NO_FLOOR_CHANGE), new OutputState(-1, ActivityState.INDOOR), curWalk);
 		// Clear our lists
 		flushLists();
 	}
 
 	public void computeWalk() {
 		wDetector.compute(aList);
+	}
+	
+	public void printLists() {
+		System.out.println("Printing out light data: ");
+		for (ActivityData d : lList) {
+			System.out.println("Timestamp: " + d.timestamp + " Data: " + d.data.get(0));
+		}
+		
+		System.out.println("Printing out humid data: ");
+		for (ActivityData d : hList) {
+			System.out.println("Timestamp: " + d.timestamp + " Data: " + d.data.get(0));
+		}
+
+		System.out.println("Printing out temp data: ");
+		for (ActivityData d : tList) {
+			System.out.println("Timestamp: " + d.timestamp + " Data: " + d.data.get(0));
+		}
+
+		System.out.println("Printing out baro data: ");
+		for (ActivityData d : bList) {
+			System.out.println("Timestamp: " + d.timestamp + " Data: " + d.data.get(0));
+		}				
 	}
 
 	public void consumeData(String mqttPayload) {
@@ -97,8 +119,10 @@ public class ActivityDetector {
 			floorState = floor;
 		}
 		if (indoorState.equals(indoor) == false) {
-			printActivityState(indoor);
-			indoorState = indoor;
+			if (indoor.timestamp != -1) { 
+				printActivityState(indoor);
+				indoorState = indoor;
+			}
 		}
 		if (walkState.equals(walkState) == false) {
 			printActivityState(walk);

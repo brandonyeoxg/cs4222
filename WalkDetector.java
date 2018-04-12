@@ -132,10 +132,10 @@ private class Vector {
 			if (getStdDevOfAccelMag(i, this.gOpt) < 0.01f) {
 				state = ActivityState.IDLE;
 				numStepsCtr = 0;
-				System.out.println("Timestamp: " + this.samples.get(i).timestamp + " Steps Idle" + " gOpt: " + this.gOpt);
+				// System.out.println("Timestamp: " + this.samples.get(i).timestamp + " Steps Idle" + " gOpt: " + this.gOpt);
 
 			} else if (highestCorrelation.moreThan(0.7f)) {
-				System.out.println("Timestamp: " + this.samples.get(i).timestamp + " Steps Walked: " + stepCount + " gOpt: " + this.gOpt);
+				// System.out.println("Timestamp: " + this.samples.get(i).timestamp + " Steps Walked: " + stepCount + " gOpt: " + this.gOpt);
 				state = ActivityState.WALK;
 				handleGammaWindowShift();
 			}
