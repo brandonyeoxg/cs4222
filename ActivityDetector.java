@@ -32,8 +32,8 @@ public class ActivityDetector {
 	public void compute() {
 		OutputState curFloor, curIndoor, curWalk;
 
-		curFloor = new OutputState(-1, ActivityState.NO_FLOOR_CHANGE);//fDetector.compute(bList);
-		curIndoor = new OutputState(-1, ActivityState.INDOOR);//iDetector.compute(tList, lList, hList);
+		curFloor = fDetector.compute(bList);
+		curIndoor = iDetector.compute(tList, lList, hList);
 		curWalk = wDetector.compute(aList);
 
 		printIfChangeInActivityState(curFloor, curIndoor, curWalk);
