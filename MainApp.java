@@ -81,6 +81,6 @@ public class MainApp {
 			e.printStackTrace();
 		}
 
-		detector.computeWalk();
+		// detector.computeWalk();
 	}
 }

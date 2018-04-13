@@ -1,5 +1,5 @@
 public class OutputState {
-	public int timestamp;
+	public long timestamp;
 	public String activityState; 
 
 	public OutputState(String activityState) {
@@ -7,7 +7,7 @@ public class OutputState {
 		this.activityState = activityState;
 	}
 
-	public OutputState(int timestamp, String activityState) {
+	public OutputState(long timestamp, String activityState) {
 		this.timestamp = timestamp;
 		this.activityState = activityState;
 	}

@@ -115,22 +115,25 @@ private class Vector {
 
 	private int gMin, gMax, gOpt, gAbsMin, gAbsMax, gInterval;
 	private int lastKnownSample;
-	private String state = ActivityState.IDLE;
+	private long lastKnownTimeStamp;
+	private String state, lastKnownState;
 	private ArrayList<Vector> samples;
 
 	public WalkDetector() {
-		gMin = 5;
-		gMax = 20;
+		gMin = 40;
+		gMax = 100;
 		gOpt = 0;
-		gAbsMin = 5;
-		gAbsMax = 20;
-		gInterval = 5;
+		gAbsMin = 40;
+		gAbsMax = 100;
+		gInterval = 10;
 
 		state = ActivityState.IDLE;
 
 		samples = new ArrayList<Vector>();
 		
 		lastKnownSample = 0;
+		lastKnownTimeStamp = 0;
+		lastKnownState = state;
 	}
 
 	public OutputState compute(ArrayList<ActivityData> accelData) {
@@ -139,46 +142,40 @@ private class Vector {
 			Vector vec = new Vector(accelData.get(i));
 			this.samples.add(vec);
 		}
-
-		// Run the algo to check steps
-
-		// remove the sample until certain size
-
-
+		state = ActivityState.IDLE;
 		int numStepsCtr = 0;
 		int stepCount = 0;
-		for (int i = 0; i < this.samples.size(); ++i) {
-			if (i + this.gOpt + this.gOpt > this.samples.size()) {
-				return new OutputState(-1, ActivityState.IDLE);
-			}			
+		for (int i = lastKnownSample; i < this.samples.size(); ++i) {
+			if (i + this.gMax + this.gMax > this.samples.size()) {
+				return new OutputState(lastKnownTimeStamp, lastKnownState);
+			}
 			Vector highestCorrelation = getMaxCorrelation(i);
-			if (getStdDevOfAccelMag(i, this.gOpt) < 0.01f) {
-				if (state == ActivityState.WALK) {
-					System.out.println("Timestamp: " + this.samples.get(i).timestamp + " Steps Idle" + " gOpt: " + this.gOpt);
-				}
+			if (getStdDevOfAccelMag(i, this.gOpt) < 0.01f) {			
 				state = ActivityState.IDLE;
 				numStepsCtr = 0;
-
-			} else if (highestCorrelation.moreThan(0.7f)) {
+				lastKnownSample = i + this.gOpt;
+				lastKnownTimeStamp = this.samples.get(i).timestamp;
+				lastKnownState = ActivityState.IDLE;
+				return new OutputState(lastKnownTimeStamp, lastKnownState);
+			} else if (highestCorrelation.moreThan(0.7f)) {					
 				state = ActivityState.WALK;
-				handleGammaWindowShift();
-				System.out.println("highestCorrelation: " + highestCorrelation.toString() + " at timestamp: " + this.samples.get(i).timestamp);
+				this.lastKnownSample = i + this.gOpt;
+				this.lastKnownState = ActivityState.WALK;
+				this.lastKnownTimeStamp = this.samples.get(i).timestamp;
+				return new OutputState(lastKnownTimeStamp, lastKnownState);
 			}
 			if (state == ActivityState.IDLE) {
 				continue;
 			}
-			if (numStepsCtr > this.gOpt / 2) {
-				// return new OutputState(accelData.get(0).timestamp, ActivityState.WALK);
-				// if (state == ActivityState.IDLE) {
-					System.out.println("Timestamp: " + this.samples.get(i).timestamp + " Steps Walked: " + stepCount + " gOpt: " + this.gOpt);
-				// }				
+			if (numStepsCtr > this.gOpt / 2) {						
 				numStepsCtr = 0;
 				stepCount += 1;
 			}
 			numStepsCtr += 1;
+			lastKnownSample = i;
 		}
-
-		return new OutputState(-1, ActivityState.IDLE);
+		// System.out.println("Computing IDLE");
+		return new OutputState(lastKnownTimeStamp, lastKnownState);
 	}
 
 	private Vector getMaxCorrelation(int fromIdx) {
@@ -206,12 +203,6 @@ private class Vector {
 			}
 
 			Vector meanVec = getAccelMeanFromTill(m, gamma);
-
-			System.out.println("Mean Vec: " + meanVec);
-			try {
-			  Thread.sleep(50000);
-			}
-			catch (Exception e) {}
 			Vector left = this.samples.get(m + k).minus(meanVec);
 
 			meanVec = getAccelMeanFromTill(m + gamma, gamma);

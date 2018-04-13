@@ -32,11 +32,11 @@ public class ActivityDetector {
 	public void compute() {
 		OutputState curFloor, curIndoor, curWalk;
 
-		curFloor = fDetector.compute(bList);
-		curIndoor = iDetector.compute(tList, lList, hList);
+		curFloor = new OutputState(-1, ActivityState.NO_FLOOR_CHANGE);//fDetector.compute(bList);
+		curIndoor = new OutputState(-1, ActivityState.INDOOR);//iDetector.compute(tList, lList, hList);
 		curWalk = wDetector.compute(aList);
 
-		printIfChangeInActivityState(new OutputState(-1, ActivityState.NO_FLOOR_CHANGE), new OutputState(-1, ActivityState.INDOOR), curWalk);
+		printIfChangeInActivityState(curFloor, curIndoor, curWalk);
 		// Clear our lists
 		flushLists();
 	}
@@ -124,7 +124,7 @@ public class ActivityDetector {
 				indoorState = indoor;
 			}
 		}
-		if (walkState.equals(walkState) == false) {
+		if (walkState.equals(walk) == false) {
 			printActivityState(walk);
 			walkState = walk;
 		}
@@ -135,7 +135,7 @@ public class ActivityDetector {
 	}
 
 	private void flushLists() {
-		//aList.clear();
+		aList.clear();
 		bList.clear();
 		tList.clear();
 		lList.clear();
