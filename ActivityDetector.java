@@ -33,16 +33,12 @@ public class ActivityDetector {
 		OutputState curFloor, curIndoor, curWalk;
 
 		curFloor = fDetector.compute(bList);
-		curIndoor = iDetector.compute(tList, lList, hList);
-		curWalk = wDetector.compute(aList);
+		curIndoor = new OutputState(-1, ActivityState.INDOOR);//iDetector.compute(tList, lList, hList);
+		curWalk = new OutputState(-1, ActivityState.IDLE);//wDetector.compute(aList);
 
 		printIfChangeInActivityState(curFloor, curIndoor, curWalk);
 		// Clear our lists
 		flushLists();
-	}
-
-	public void computeWalk() {
-		wDetector.compute(aList);
 	}
 	
 	public void printLists() {
