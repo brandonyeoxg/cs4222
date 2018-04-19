@@ -87,6 +87,7 @@ public class MainApp {
 						break;
 					}
 				}
+//                System.out.println(counter);
                 if (counter == 0) {
                     ableToChange = true;
                 }
@@ -96,8 +97,9 @@ public class MainApp {
                         counter = 10;
                         ableToChange = false;
                     }
+                } else {
+                    counter -= 1;
                 }
-                counter -= 1;
 			}			
 		} catch(Exception e) {
 			e.printStackTrace();
