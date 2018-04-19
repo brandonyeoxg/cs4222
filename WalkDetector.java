@@ -103,214 +103,129 @@ private class Vector {
 		}
 	}
 
-	private int gMin, gMax, gOpt, gAbsMin, gAbsMax, gInterval;
-	private int lastKnownSample;
-	private long lastKnownTimeStamp;
-	private String state, lastKnownState;
-	private ArrayList<Vector> samples;
+	private String state;
+	private ArrayList<Float> samples;
+	private ArrayList<Long> timestamps;
+	private final int winSize = 20;
+	private final float c = 1.0f/(2 * winSize + 1);
+	private int sampleIndex = 0;
+	private final float T1_THRESH = 2.0f;
+	private final float T2_THRESH = 1.0f;
+	private float moving_t1_thresh = T1_THRESH;
+	private float moving_t2_thresh = T2_THRESH;
+	private float b1, b2;
+	private float prevB1;
+	private final float MAX_ERROR_ALLOWED = 0.4f;
+	private enum phase {
+		STANCE,
+		SWING
+	}
 
+	private phase curPhase;
+	private long curTimeStamp;
+	private boolean waitNextWindow;
 	public WalkDetector() {
-		gMin = 40;
-		gMax = 100;
-		gOpt = 0;
-		gAbsMin = 40;
-		gAbsMax = 100;
-		gInterval = 10;
-
 		state = ActivityState.IDLE;
-
-		samples = new ArrayList<Vector>();
-		
-		lastKnownSample = 0;
-		lastKnownTimeStamp = 0;
-		lastKnownState = state;
+		samples = new ArrayList<Float>();
+		timestamps = new ArrayList<Long>();
+		b1 = b2 = 0;
+		curPhase = phase.STANCE;
+		curTimeStamp = 0;
+		waitNextWindow = false;
 	}
 
 	public OutputState compute(ArrayList<ActivityData> accelData) {
-		// Convert into vector
-		for (int i = 0; i < accelData.size(); ++i) {
-			Vector vec = new Vector(accelData.get(i));
-			this.samples.add(vec);
+		waitNextWindow = false;
+		for (ActivityData data : accelData) {
+			Vector vec = new Vector(data).multConst(9.80665f);
+			samples.add(vec.getMag());
+			timestamps.add(data.timestamp);
+			for (; sampleIndex < samples.size(); ++sampleIndex) {
+				if (0 > sampleIndex - winSize) {
+					continue;
+				}
+				if (sampleIndex + winSize >= samples.size()) {
+					break;
+				}
+				float variance = getLocalVariance(sampleIndex);
+				float stdDev = (float)Math.sqrt(variance);
+				if (curPhase == phase.STANCE) {
+					if (Math.abs(stdDev - moving_t1_thresh) <= MAX_ERROR_ALLOWED ) {
+						moving_t1_thresh = 0.2f * moving_t1_thresh + stdDev * 0.8f;
+						if (Math.abs(T1_THRESH - moving_t1_thresh) < 0.8f) {
+							moving_t1_thresh = T1_THRESH * 0.7f + moving_t1_thresh * 0.3f;
+						}
+						System.out.println("Moving T1 thresh: " + moving_t1_thresh);
+						b1 = moving_t1_thresh;
+						curPhase = phase.SWING;
+						state = ActivityState.WALK;
+						curTimeStamp = getMeanTimestamp(sampleIndex);
+					} else {
+						b1 = 0;
+					}
+				}
+				if (curPhase == phase.SWING) {
+					if (stdDev < moving_t2_thresh) {
+						b2 = moving_t2_thresh;
+					}
+					float forwardStd = lookForwardStd(sampleIndex);
+					if (prevB1 < b1 && Math.abs(forwardStd - moving_t2_thresh) <= MAX_ERROR_ALLOWED) {
+						moving_t2_thresh = 0.2f * moving_t2_thresh + forwardStd * 0.8f;
+						if (Math.abs(moving_t2_thresh - T2_THRESH) < 0.8f) {
+							moving_t2_thresh = T2_THRESH * 0.7f + moving_t2_thresh * 0.3f;
+						}
+						System.out.println("Moving T2 thresh: " + moving_t2_thresh);
+						curPhase = phase.STANCE;
+						state = ActivityState.IDLE;
+						curTimeStamp = getMeanTimestamp(sampleIndex);
+					}
+				}
+				if (waitNextWindow == true) {
+					break;
+				}
+			}
 		}
-		state = ActivityState.IDLE;
-		int numStepsCtr = 0;
-		int stepCount = 0;
-		for (int i = lastKnownSample; i < this.samples.size(); ++i) {
-			if (i + this.gMax + this.gMax > this.samples.size()) {
-				return new OutputState(lastKnownTimeStamp, lastKnownState);
-			}
-			Vector highestCorrelation = getMaxCorrelation(i);
-			if (getStdDevOfAccelMag(i, this.gOpt) < 0.01f) {			
-				state = ActivityState.IDLE;
-				numStepsCtr = 0;
-				lastKnownSample = i + this.gOpt;
-				lastKnownTimeStamp = this.samples.get(i).timestamp;
-				lastKnownState = ActivityState.IDLE;
-				return new OutputState(lastKnownTimeStamp, lastKnownState);
-			} else if (highestCorrelation.moreThan(0.7f)) {					
-				state = ActivityState.WALK;
-				this.lastKnownSample = i + this.gOpt;
-				this.lastKnownState = ActivityState.WALK;
-				this.lastKnownTimeStamp = this.samples.get(i).timestamp;
-				return new OutputState(lastKnownTimeStamp, lastKnownState);
-			}
-			if (state == ActivityState.IDLE) {
-				continue;
-			}
-			if (numStepsCtr > this.gOpt / 2) {						
-				numStepsCtr = 0;
-				stepCount += 1;
-			}
-			numStepsCtr += 1;
-			lastKnownSample = i;
-		}
-		// System.out.println("Computing IDLE");
-		return new OutputState(lastKnownTimeStamp, lastKnownState);
+		return new OutputState(curTimeStamp , state);
 	}
 
-	private Vector getMaxCorrelation(int fromIdx) {
-		Vector highestCorrelation = new Vector(0,0,0);
-		int highestGamma = this.gMin;
-		for (int gamma = this.gMin; gamma < this.gMax; ++gamma) {
-			if (fromIdx + gamma + gamma >= this.samples.size()) {
+	private float getLocalVariance(int idx) {
+		float variance = 0.0f;
+		float mean = getLocalMean(idx);
+		for (int i = idx - winSize; i < idx + winSize; ++i) {
+			variance += Math.pow(this.samples.get(i) - mean, 2);
+		}
+		return variance * this.c;
+	}
+
+	private float getLocalMean(int idx) {
+		float sum = 0.0f;
+		for(int i = idx - winSize; i < idx + winSize; ++i) {
+			sum += this.samples.get(i);
+		}
+		return sum * this.c;
+	}
+
+	private float lookForwardStd(int idx) {
+		float maxStd = 0.0f; 
+		for (int i = idx; i < idx + winSize; ++i) {
+			if (i + winSize >= this.samples.size()) {
+				waitNextWindow = true;
+				sampleIndex = i - winSize;
 				break;
 			}
-			Vector correlation = getAutoCorrelation(this.samples, fromIdx, gamma);
-			highestCorrelation = getHighestCorrelation(highestCorrelation, correlation);
-			if (highestCorrelation.equals(correlation)) {
-				highestGamma = gamma;
+			float std = getLocalVariance(i);
+			if (maxStd < std) {
+				maxStd = std;
 			}
 		}
-		this.gOpt = highestGamma;
-		return highestCorrelation;
+		return maxStd;
 	}
 
-	private Vector getAutoCorrelation(ArrayList<Vector> accelData, int m, int gamma) {
-		Vector outputCorrelation = new Vector(0, 0, 0);
-		for (int k = 0; k < gamma; ++k) {
-			if (m + k + gamma + gamma >= accelData.size()) {
-				break;
-			}
-
-			Vector meanVec = getAccelMeanFromTill(m, gamma);
-			Vector left = this.samples.get(m + k).minus(meanVec);
-
-			meanVec = getAccelMeanFromTill(m + gamma, gamma);
-			Vector right = this.samples.get(m + k + gamma).minus(meanVec);
-
-			Vector result = left.mult(right);
-			outputCorrelation = outputCorrelation.add(result);
+	private long getMeanTimestamp(int idx) {
+		long timestamp = 0;
+		for (int i = idx - winSize; i < idx + winSize; ++i) {
+			timestamp += timestamps.get(i);
 		}
-
-		Vector stdDevLeftVec = getAccelStdDevFromTill(m, gamma);
-		Vector stdDevRightVec = getAccelStdDevFromTill(m + gamma, gamma);
-
-		Vector denominatorVec = stdDevLeftVec.mult(stdDevRightVec);
-		denominatorVec = denominatorVec.multConst(gamma);
-
-		outputCorrelation = outputCorrelation.div(denominatorVec);
-		return outputCorrelation;
-	}
-
-	private Vector getAccelMean(ArrayList<Vector> dataSets, int gamma) {
-		float x = 0.0f, y = 0.0f, z = 0.0f;
-		for (int i = 0; i < gamma; ++i) {
-			x += dataSets.get(i).x;
-			y += dataSets.get(i).y;
-			z += dataSets.get(i).z;
-		}
-		Vector outputVec = new Vector(x / gamma, y / gamma, z / gamma);
-		return outputVec;
-	}
-
-	private Vector getAccelStdDev(ArrayList<Vector> dataSets, int gamma) {
-		Vector meanVec = getAccelMean(dataSets, gamma);
-		Vector stdDevVec = new Vector(0.0f, 0.0f, 0.0f);
-		for(int i = 0; i < gamma; ++i) {
-			stdDevVec.x += Math.pow(dataSets.get(i).x - meanVec.x, 2);
-			stdDevVec.y += Math.pow(dataSets.get(i).y - meanVec.y, 2);
-			stdDevVec.z += Math.pow(dataSets.get(i).z - meanVec.z, 2);
-		}
-
-		stdDevVec.x = (float) Math.sqrt(stdDevVec.x / gamma);
-		stdDevVec.y = (float) Math.sqrt(stdDevVec.y / gamma);
-		stdDevVec.z = (float) Math.sqrt(stdDevVec.z / gamma);
-		
-		return stdDevVec;
-	}
-
-	private Vector getAccelMeanFromTill(int m, int gamma) {
-		ArrayList<Vector> newSample = new ArrayList<Vector>(gamma);
-		for (int i = 0; i < gamma; ++i) {
-			int targetIdx = m + i;
-			newSample.add(this.samples.get(targetIdx));
-		}
-		Vector outputMeanVec = getAccelMean(newSample, gamma);
-		return outputMeanVec;
-	}
-
-	private Vector getAccelStdDevFromTill(int m, int gamma) {
-		ArrayList<Vector> newSample = new ArrayList<Vector>(gamma);
-		for(int i = 0; i < gamma; ++i) {
-			int targetIdx = m + i;
-			newSample.add(this.samples.get(targetIdx));
-		}
-
-		Vector outputStdDevVec = getAccelStdDev(newSample, gamma);
-		return outputStdDevVec;
-	}
-
-	private float getStdDevOfAccelMag(int fromIdx, int windowSize) {
-		ArrayList<Float> sampleMagnitudes = new ArrayList<Float>(windowSize);
-
-		for (int k = 0; k < windowSize; ++k) {
-			int targetIdx = fromIdx + k;
-			sampleMagnitudes.add(this.samples.get(targetIdx).getMag());
-		}
-		return getStdDev(sampleMagnitudes);
-	}
-
-	private void handleGammaWindowShift() {
-		this.gMin = this.gOpt - this.gInterval;
-		if (this.gMin < this.gAbsMin) {
-			this.gMin = this.gAbsMin;
-			this.gMax = this.gMin + (this.gInterval * 2);
-		} else {
-			this.gMax = this.gOpt + this.gInterval;
-			if (this.gMax > this.gAbsMax) {
-				this.gMax = this.gAbsMax;
-				this.gMin = this.gMax - (this.gInterval * 2);
-			}
-		}
-	}
-
-	private Vector getHighestCorrelation(Vector left, Vector right) {
-		float leftSum = left.x + left.y + left.z;
-		float rightSum = right.x + right.y + right.z;
-		if (leftSum > rightSum) {
-			return left;
-		}
-		return right;
-	}	
-
-	private float getStdDev(ArrayList<Float> samples) {
-		float mean = getMean(samples);
-		float stdDev = 0;
-		for (int i = 0; i < samples.size(); ++i) {
-			stdDev += Math.pow(samples.get(i) - mean, 2);
-		}
-		stdDev = (float)Math.sqrt(stdDev / samples.size());
-		return stdDev;
-	}
-
-	private float getMean(ArrayList<Float> samples) {
-		if (samples.size() < 1) {
-			System.exit(-1);
-		}
-		float output = 0;
-		for (int i = 0 ; i < samples.size(); ++i) {
-			output += samples.get(i);
-		}
-		return output / samples.size();
+		return timestamp / (winSize * 2);
 	}
 }
