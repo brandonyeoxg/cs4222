@@ -2,51 +2,73 @@ import java.util.ArrayList;
 
 public class FloorDetector {
 	private static final int MOTION_THRESH = 2;
-	private float current_tracking_delta;
+	private float curr_tracking_delta;
 	private float curr_mean_bmp;
-	private String state;
+	private enum floorState {
+		NOT_MOVING,
+		MOVING
+	}
+	private floorState state;
+	private String outputState;
 	private ArrayList<Float> sampleWindow;
-	private static final int sampleWindowLen = 100;
-	private static final int MIN_CLUSTER_DST = 26;
+	private static final int sampleWindowLen = 20;
+	private static final float MIN_CLUSTER_DST = 26.0f;
 	private long curr_timestamp;
 	private float prev_std_bmp;
+	private float curr_level;
 	public FloorDetector() {
-		state = ActivityState.NO_FLOOR_CHANGE;
+		state = floorState.NOT_MOVING;
 		sampleWindow = new ArrayList<Float>(sampleWindowLen);
-		current_tracking_delta = 0;
+		curr_tracking_delta = 0;
 		curr_mean_bmp = 0;
 		curr_timestamp = -1;
 		prev_std_bmp = 0;
+		outputState = ActivityState.NO_FLOOR_CHANGE;
+		curr_level = 0;
 	}
 
 	public OutputState compute(ArrayList<ActivityData> baroData) {
 		for (ActivityData data : baroData) {
-			float convertedToPa = data.data.get(0) * 100; 
+			float convertedToPa = data.data.get(0) * 100;
 			sampleWindow.add(convertedToPa);
-			float mean_bmp = getMean(sampleWindow);
-			float std_bmp = getStdDev(sampleWindow);
-
-			//System.out.println("Relative std " + Math.abs(std_bmp - prev_std_bmp));
-			if (state.equals(ActivityState.NO_FLOOR_CHANGE)) {
-				curr_mean_bmp = mean_bmp;
-				if (Math.abs(std_bmp - prev_std_bmp) > MOTION_THRESH) {
-					state = ActivityState.FLOOR_CHANGE;
-					prev_std_bmp = std_bmp;
-				}
-			} else {
-				if (Math.abs(std_bmp - prev_std_bmp) < MOTION_THRESH) {
-					state = ActivityState.NO_FLOOR_CHANGE;
-					float prev_mean_bmp = curr_mean_bmp;
+			if (sampleWindow.size() >= sampleWindowLen) {
+				float mean_bmp = getMean(sampleWindow);
+				float std_bmp = getStdDev(sampleWindow);
+				float relative_bmp = std_bmp;
+				if (state == floorState.NOT_MOVING) {
 					curr_mean_bmp = mean_bmp;
-					float journey_delta = curr_mean_bmp - prev_mean_bmp;
-					float min_delta = getMinDelta(journey_delta);
-					current_tracking_delta += journey_delta;
-					prev_std_bmp = std_bmp;
+					outputState = ActivityState.NO_FLOOR_CHANGE;
+					curr_timestamp = data.timestamp;
+					if (std_bmp >= MOTION_THRESH) {
+						state = floorState.MOVING;
+					}
+				} else {
+					if (std_bmp < MOTION_THRESH) {
+						state = floorState.NOT_MOVING;
+						float prev_mean_bmp = curr_mean_bmp;
+						curr_mean_bmp = mean_bmp;
+						float journey_delta = curr_mean_bmp - prev_mean_bmp;
+						float min_delta = getMinDelta(journey_delta);
+						curr_tracking_delta += journey_delta;
+						curr_level = Math.round(curr_tracking_delta / min_delta);
+						System.out.println("curr_tracking_delta: " + curr_tracking_delta + " Journey Delta: " + journey_delta + " Mean: " + mean_bmp);
+						System.out.println("Curr level: " + curr_level);						
+						curr_timestamp = data.timestamp;
+						if (Math.abs(curr_level) > 0) {
+							outputState = ActivityState.FLOOR_CHANGE;
+							curr_timestamp = data.timestamp;
+							break;
+						} else {
+							outputState = ActivityState.NO_FLOOR_CHANGE;
+						}
+					}
 				}
 			}
-			curr_timestamp = data.timestamp;
 		}
-		return new OutputState(curr_timestamp, state);
+		if (sampleWindow.size() >= sampleWindowLen) {
+			sampleWindow = new ArrayList<Float>(sampleWindowLen);
+		}
+		return new OutputState(curr_timestamp, outputState);
 	}
 
 	private float getMinDelta(float journey_delta) {
