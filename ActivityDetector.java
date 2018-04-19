@@ -34,14 +34,15 @@ public class ActivityDetector {
 	public boolean compute() {
 		OutputState curFloor, curIndoor, curWalk;
 
+		System.out.println("AlistSize: " + aList.size() + " bListSize: " + bList.size() + " hListSize: " + hList.size());
 		curFloor = fDetector.compute(bList);
-		curIndoor = new OutputState(-1, ActivityState.INDOOR);//iDetector.compute(tList, lList, hList);
-		curWalk = new OutputState(-1, ActivityState.IDLE);//wDetector.compute(aList);
+		curIndoor = iDetector.compute(tList, lList, hList);
+		curWalk = wDetector.compute(aList);
 
 		changedState = printIfChangeInActivityState(curFloor, curIndoor, curWalk);
-		// Clear our lists
+		// // Clear our lists
 		flushLists();
-        return changedState;
+        return false;
 	}
 	
 	public void printLists() {
@@ -68,8 +69,9 @@ public class ActivityDetector {
 
 	public void consumeData(String mqttPayload) {
 		String sanitisedPayload = sanitisePayload(mqttPayload);
+		// System.out.println("SanitisedPayload: " + sanitisedPayload);
 		String[] tokens = sanitisedPayload.split(",");
-		ActivityData activityData = sanitiseTokens(tokens);
+		ActivityData activityData = sanitiseTokens(tokens);		
 		switch(tokens[SENSOR_TYPE_FIELD]) {
 			case "a":
 				aList.add(activityData);
@@ -93,10 +95,11 @@ public class ActivityDetector {
 
 	private String sanitisePayload(String payload) {
 		// Sample payload is
-		// {"value": "unicast message received from 82.2,518914,b,1006.56,,", "nodeid": "27648", "time": "2018-04-10T11:42:56.268125Z"}
-		int initialPos = payload.indexOf(',');
-		int lastPos = payload.indexOf('"', initialPos);
-		String sanitisedString = payload.substring(initialPos + 1, lastPos);
+		// Message:	{"nodeid": "27648", "value": "unicast message received from 179.130,386750,b,1006.71,,", "time": "2018-04-19T04:19:36.476723Z"}
+		String initialSanitiseData = payload.split("value\":")[1];
+		int initialPos = initialSanitiseData.indexOf(',');
+		int lastPos = initialSanitiseData.indexOf('"', initialPos);
+		String sanitisedString = initialSanitiseData.substring(initialPos + 1, lastPos);
 		return sanitisedString;
 	}
 

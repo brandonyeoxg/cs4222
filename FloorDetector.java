@@ -11,7 +11,7 @@ public class FloorDetector {
 	private floorState state;
 	private String outputState;
 	private ArrayList<Float> sampleWindow;
-	private static final int sampleWindowLen = 20;
+	private static final int sampleWindowLen = 2;
 	private static final float MIN_CLUSTER_DST = 26.0f;
 	private long curr_timestamp;
 	private float prev_std_bmp;
@@ -64,9 +64,6 @@ public class FloorDetector {
 					}
 				}
 			}
-		}
-		if (sampleWindow.size() >= sampleWindowLen) {
-			sampleWindow = new ArrayList<Float>(sampleWindowLen);
 		}
 		return new OutputState(curr_timestamp, outputState);
 	}

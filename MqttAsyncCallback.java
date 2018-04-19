@@ -262,10 +262,10 @@ public class MqttAsyncCallback implements MqttCallback {
 		// Called when a message arrives from the server that matches any
 		// subscription made by the client
 		String time = new Timestamp(System.currentTimeMillis()).toString();
-		System.out.println("Time:\t" +time +
-                           "  Topic:\t" + topic +
-                           "  Message:\t" + new String(message.getPayload()) +
-                           "  QoS:\t" + message.getQos());
+		// System.out.println("Time:\t" +time +
+  //                          "  Topic:\t" + topic +
+  //                          "  Message:\t" + new String(message.getPayload()) +
+  //                          "  QoS:\t" + message.getQos());
 
 		detector.consumeData(new String(message.getPayload()));
 	}

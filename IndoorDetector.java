@@ -17,7 +17,7 @@ public class IndoorDetector {
     private final float TEMPERATURE_STANDARDDEV_THRESHOLD = 2.0f;
 
     private String state, lastKnownState;
-    private int lastKnownTimeStamp;
+    private long lastKnownTimeStamp;
     private ArrayList<ActivityData> lightSamples, humiditySamples, temperatureSamples;
     private int lightSamplesStartIndex, lightSamplesEndIndex;
     private int humiditySamplesStartIndex, humiditySamplesEndIndex;
@@ -141,7 +141,7 @@ public class IndoorDetector {
 
     private boolean hasExceedStandardDevThreshold(float threshold, float value) {
         if (value >= threshold) {
-            int dataTimestamp = 0;
+            long dataTimestamp = 0;
             if (threshold == TEMPERATURE_STANDARDDEV_THRESHOLD) {
 //                dataTimestamp = temperatureSamples.get(temperatureSamplesEndIndex - 1).data.get(0);
                 dataTimestamp = temperatureSamples.get(temperatureSamplesEndIndex-1).timestamp;
@@ -169,20 +169,20 @@ public class IndoorDetector {
         }
     }
 
-    private int getLatestTimeStamp() {
-        int timestamp = 0;
+    private long getLatestTimeStamp() {
+        long timestamp = 0;
         if (humiditySamples.size() != 0) {
-           int humidityTimeStamp = humiditySamples.get(humiditySamplesEndIndex - 1).timestamp;
+           long humidityTimeStamp = humiditySamples.get(humiditySamplesEndIndex - 1).timestamp;
            if (humidityTimeStamp > timestamp) {
             timestamp = humidityTimeStamp;
            }
         } if (lightSamples.size() != 0) {
-           int lightTimeStamp = lightSamples.get(lightSamplesEndIndex - 1).timestamp;
+           long lightTimeStamp = lightSamples.get(lightSamplesEndIndex - 1).timestamp;
            if (lightTimeStamp > timestamp) {
             timestamp = lightTimeStamp;
            }
         } if (temperatureSamples.size() != 0) {
-           int temperatureTimeStamp = temperatureSamples.get(temperatureSamplesEndIndex - 1).timestamp;
+           long temperatureTimeStamp = temperatureSamples.get(temperatureSamplesEndIndex - 1).timestamp;
            if (temperatureTimeStamp > timestamp) {
             timestamp = temperatureTimeStamp;
            }

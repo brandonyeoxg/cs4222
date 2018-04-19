@@ -15,9 +15,9 @@ public class MainApp {
 	private static final String password = "fUDqUGVy0XAjftpC";
 	private static final String userName = "cs4222.team13@gmail.com";
 	private static final String brokerUrl = "tcp://ocean.comp.nus.edu.sg:1883";
-	private static final String clientId = "";
+	private static final String clientId = "team13";
 	private static final String topic = "#";
-	private static final int qos = 2;
+	private static final int qos = 0;
 	private static final boolean cleanSession = true;
 	private static final boolean quietMode = false;
 	private static final long timeInterval = 1000;
@@ -33,8 +33,8 @@ public class MainApp {
     private static boolean ableToChangeIndoor = false;
     
 	public static void main(String args[]) {
-		// realExecution();
-		testExecution();
+		realExecution();
+		// testExecution();
 	}
 
 	private static void realExecution() {
@@ -45,17 +45,6 @@ public class MainApp {
 			Runnable runnable = new Runnable() {
 				public void run() {
 					while(true) {
-//                        if ((System.currentTimeMillis() - lastChangedTimeIndoor) > (10 * Math.pow(10,3))) {
-//                            ableToChangeIndoor = true;
-//                        }
-//                        if (ableToChange) {
-//                            changedState = detector.compute();
-////                            System.out.println(System.currentTimeMillis());
-//                            if (changedState) {
-//                                lastChangedTime = System.currentTimeMillis();
-//                                ableToChange = false;
-//                            }
-//                        }
                         detector.compute();
 						try {
 							Thread.sleep(timeInterval);
