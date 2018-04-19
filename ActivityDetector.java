@@ -8,6 +8,8 @@ public class ActivityDetector {
 	private FloorDetector fDetector;
 	private IndoorDetector iDetector;
 	private WalkDetector wDetector;
+    
+    private static boolean changedState = false;
 
 	private ArrayList<ActivityData> aList, bList, tList, lList, hList; 
 
@@ -29,16 +31,17 @@ public class ActivityDetector {
 		walkState = new OutputState(ActivityState.IDLE);
 	}
 
-	public void compute() {
+	public boolean compute() {
 		OutputState curFloor, curIndoor, curWalk;
 
 		curFloor = fDetector.compute(bList);
 		curIndoor = iDetector.compute(tList, lList, hList);
 		curWalk = wDetector.compute(aList);
 
-		printIfChangeInActivityState(curFloor, curIndoor, curWalk);
+		changedState = printIfChangeInActivityState(curFloor, curIndoor, curWalk);
 		// Clear our lists
 		flushLists();
+        return changedState;
 	}
 
 	public void computeWalk() {
@@ -113,21 +116,25 @@ public class ActivityDetector {
 		return data;
 	}
 
-	private void printIfChangeInActivityState(OutputState floor, OutputState indoor, OutputState walk) {
+	private boolean printIfChangeInActivityState(OutputState floor, OutputState indoor, OutputState walk) {
 		if (floorState.equals(floor) == false) {
 			printActivityState(floor);
 			floorState = floor;
+            return true;
 		}
 		if (indoorState.equals(indoor) == false) {
 			if (indoor.timestamp != -1) { 
 				printActivityState(indoor);
 				indoorState = indoor;
-			}
+                return true;
+            }
 		}
 		if (walkState.equals(walk) == false) {
 			printActivityState(walk);
 			walkState = walk;
+            return true;
 		}
+        return false;
 	}
 
 	private void printActivityState(OutputState toBeOutput) {

@@ -11,7 +11,6 @@ import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
 import java.io.File;
 import java.util.Scanner;
 
-
 public class MainApp {
 	private static final String password = "fUDqUGVy0XAjftpC";
 	private static final String userName = "cs4222.team13@gmail.com";
@@ -22,6 +21,9 @@ public class MainApp {
 	private static final boolean cleanSession = true;
 	private static final boolean quietMode = false;
 	private static final long timeInterval = 1000;
+    private static long lastChangedTime = 0;
+    private static boolean changedState = false;
+    private static boolean ableToChange = false;
 
 	public static void main(String args[]) {
 		// realExecution();
@@ -36,7 +38,17 @@ public class MainApp {
 			Runnable runnable = new Runnable() {
 				public void run() {
 					while(true) {
-						detector.compute();
+                        if ((System.currentTimeMillis() - lastChangedTime) > (10 * Math.pow(10,3))) {
+                            ableToChange = true;
+                        }
+                        if (ableToChange) {
+                            changedState = detector.compute();
+//                            System.out.println(System.currentTimeMillis());
+                            if (changedState) {
+                                lastChangedTime = System.currentTimeMillis();
+                                ableToChange = false;
+                            }
+                        }
 						try {
 							Thread.sleep(timeInterval);
 						} catch(InterruptedException e) {
@@ -61,7 +73,7 @@ public class MainApp {
 	private static void testExecution() {
 		final ActivityDetector detector = new ActivityDetector();
 		final String testfile = "walk_1_Addition.csv";
-
+        int counter = 0;
 		try {
 			File file = new File(testfile);
 			Scanner sc = new Scanner(file);
@@ -75,7 +87,17 @@ public class MainApp {
 						break;
 					}
 				}
-				detector.compute();
+                if (counter == 0) {
+                    ableToChange = true;
+                }
+                if (ableToChange) {
+                    changedState = detector.compute();
+                    if (changedState) {
+                        counter = 10;
+                        ableToChange = false;
+                    }
+                }
+                counter -= 1;
 			}			
 		} catch(Exception e) {
 			e.printStackTrace();
