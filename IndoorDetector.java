@@ -11,7 +11,7 @@ public class IndoorDetector {
     public static float TEMP_WEIGHTING = 0.2f;
     public static float HUMID_WEIGHTING = 0.2f;
 
-    private final int WINDOW_SIZE = 2;
+    private final int WINDOW_SIZE = 3;
     private final float LIGHT_STANDARDDEV_THRESHOLD = 150.0f;
     private final float HUMID_STANDARDDEV_THRESHOLD = 0.25f;
     private final float TEMPERATURE_STANDARDDEV_THRESHOLD = 0.025f;
@@ -65,7 +65,7 @@ public class IndoorDetector {
             boolean isBeyondLightStandDev = hasExceedStandardDevThreshold(LIGHT_STANDARDDEV_THRESHOLD, standardDevForLight);
             boolean isBeyondHumidityStandDev = hasExceedStandardDevThreshold(HUMID_STANDARDDEV_THRESHOLD, standardDevForHumidity);
 
-            if ((isBeyondTempStandDev && isBeyondLightStandDev) || (isBeyondLightStandDev && isBeyondHumidityStandDev) || (isBeyondHumidityStandDev && isBeyondTempStandDev)) {
+            if ((isBeyondTempStandDev && isBeyondLightStandDev) || (isBeyondLightStandDev && isBeyondHumidityStandDev)  || (isBeyondHumidityStandDev && isBeyondTempStandDev)) {
                 changeState();
                 return new OutputState(lastKnownTimeStamp, lastKnownState);
             } else {
