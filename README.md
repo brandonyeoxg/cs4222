@@ -24,12 +24,12 @@ To build the project we just need to run `./make_java` <br>
 To run the project we just need to run `./run_java`. <br>
 
 ### Running the experiment
-1) Go to ocean.comp.nus.edu.sg to schedule project-receiver-27648 for about 15mins~
-2) On a new terminal ./run_java to run our `MainApp`
-3) Flash the unicast_send_from_usb.bin into sensortag
-4) On a fresh terminal run ./emulator_script
-	- you can change the data set to run inside ./emulator_script
+1) Go to `ocean.comp.nus.edu.sg` to schedule **project-receiver-27648** for about 15mins~
+2) On a new terminal `./run_java` to run our `MainApp`
+3) Flash the `unicast_send_from_usb.bin` into sensortag
+4) On a fresh terminal run `./emulator_script`
+	- you can change the data set to run inside `./emulator_script`
 5) Press the reset button (one of the side buttons on sensor tag) to start
-	- If it jams, just reflash unicast_send_from_usb.bin into sensortag
+	- If it jams, just reflash `unicast_send_from_usb.bin` into sensortag
 
-`If all else fails.... read the project pdf again!`
+**If all else fails.... read the project pdf again!**
