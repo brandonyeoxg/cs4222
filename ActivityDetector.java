@@ -148,25 +148,21 @@ public class ActivityDetector {
 		long elapsedWalk = currentTime - prevWalkChange;
 
 		if (floorState.equals(floor) == false && elapsedFloor/1000 > 10) {
-			System.out.println("Floor state timer expired");
 			printActivityState(floor);
 			floorState = floor;
 			prevFloorChange = currentTime;
 		}
 		if (indoorState.equals(indoor) == false && elapsedIndoor/1000 > 10) {
 			if (indoor.timestamp != -1) { 
-				System.out.println("Indoor state timer expired");
 				printActivityState(indoor);
 				indoorState = indoor;
 				prevIndoorChange = currentTime;
             }
 		}
 		if (walkState.equals(walk) == false && elapsedWalk/1000 > 10) {
-			System.out.println("Indoor state timer expired");
 			printActivityState(walk);
 			walkState = walk;
 			prevWalkChange = currentTime;
-			System.out.println("Walk state timer expired");
 		}
 	}
 
