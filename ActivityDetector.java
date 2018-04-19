@@ -8,14 +8,14 @@ public class ActivityDetector {
 	private FloorDetector fDetector;
 	private IndoorDetector iDetector;
 	private WalkDetector wDetector;
-    
-    private static boolean changedState = false;
 
 	private ArrayList<ActivityData> aList, bList, tList, lList, hList; 
 
 	private OutputState floorState;
 	private OutputState indoorState;
 	private OutputState walkState;
+
+	private long prevFloorChange, prevIndoorChange, prevWalkChange;
 
 	public ActivityDetector() {
 		fDetector = new FloorDetector();
@@ -29,20 +29,20 @@ public class ActivityDetector {
 		floorState = new OutputState(ActivityState.NO_FLOOR_CHANGE);
 		indoorState = new OutputState(ActivityState.INDOOR);
 		walkState = new OutputState(ActivityState.IDLE);
+
+		prevFloorChange = prevIndoorChange = prevWalkChange = 0;
 	}
 
-	public boolean compute() {
+	public void compute() {
 		OutputState curFloor, curIndoor, curWalk;
 
-		System.out.println("AlistSize: " + aList.size() + " bListSize: " + bList.size() + " hListSize: " + hList.size());
 		curFloor = fDetector.compute(bList);
 		curIndoor = iDetector.compute(tList, lList, hList);
 		curWalk = wDetector.compute(aList);
 
-		changedState = printIfChangeInActivityState(curFloor, curIndoor, curWalk);
+		printIfChangeInActivityState(curFloor, curIndoor, curWalk);
 		// // Clear our lists
 		flushLists();
-        return false;
 	}
 	
 	public void printLists() {
@@ -69,7 +69,6 @@ public class ActivityDetector {
 
 	public void consumeData(String mqttPayload) {
 		String sanitisedPayload = sanitisePayload(mqttPayload);
-		// System.out.println("SanitisedPayload: " + sanitisedPayload);
 		String[] tokens = sanitisedPayload.split(",");
 		ActivityData activityData = sanitiseTokens(tokens);		
 		switch(tokens[SENSOR_TYPE_FIELD]) {
@@ -91,6 +90,33 @@ public class ActivityDetector {
 			default:
 				System.out.println("There is no proper sensor type!");
 		}
+	}
+
+	public void consumeTestData(String mqttPayload) {
+		int initialPos = mqttPayload.indexOf(',');
+		int lastPos = mqttPayload.indexOf('"', initialPos);
+		String sanitisedString = mqttPayload.substring(initialPos + 1, lastPos);
+		String[] tokens = sanitisedString.split(",");
+		ActivityData activityData = sanitiseTokens(tokens);		
+		switch(tokens[SENSOR_TYPE_FIELD]) {
+			case "a":
+				aList.add(activityData);
+				break;
+			case "b":
+				bList.add(activityData);
+				break;
+			case "t":
+				tList.add(activityData);
+				break;
+			case "l":
+				lList.add(activityData);
+				break;
+			case "h":
+				hList.add(activityData);
+				break;
+			default:
+				System.out.println("There is no proper sensor type!");
+		}		
 	}
 
 	private String sanitisePayload(String payload) {
@@ -115,25 +141,33 @@ public class ActivityDetector {
 		return data;
 	}
 
-	private boolean printIfChangeInActivityState(OutputState floor, OutputState indoor, OutputState walk) {
-		if (floorState.equals(floor) == false) {
+	private void printIfChangeInActivityState(OutputState floor, OutputState indoor, OutputState walk) {
+		long currentTime = System.currentTimeMillis();
+		long elapsedIndoor = currentTime - prevIndoorChange;
+		long elapsedFloor = currentTime - prevFloorChange;
+		long elapsedWalk = currentTime - prevWalkChange;
+
+		if (floorState.equals(floor) == false && elapsedFloor/1000 > 10) {
+			System.out.println("Floor state timer expired");
 			printActivityState(floor);
 			floorState = floor;
-            return true;
+			prevFloorChange = currentTime;
 		}
-		if (indoorState.equals(indoor) == false) {
+		if (indoorState.equals(indoor) == false && elapsedIndoor/1000 > 10) {
 			if (indoor.timestamp != -1) { 
+				System.out.println("Indoor state timer expired");
 				printActivityState(indoor);
 				indoorState = indoor;
-                return true;
+				prevIndoorChange = currentTime;
             }
 		}
-		if (walkState.equals(walk) == false) {
+		if (walkState.equals(walk) == false && elapsedWalk/1000 > 10) {
+			System.out.println("Indoor state timer expired");
 			printActivityState(walk);
 			walkState = walk;
-            return true;
+			prevWalkChange = currentTime;
+			System.out.println("Walk state timer expired");
 		}
-        return false;
 	}
 
 	private void printActivityState(OutputState toBeOutput) {

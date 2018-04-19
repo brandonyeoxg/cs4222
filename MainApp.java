@@ -17,7 +17,7 @@ public class MainApp {
 	private static final String brokerUrl = "tcp://ocean.comp.nus.edu.sg:1883";
 	private static final String clientId = "team13";
 	private static final String topic = "#";
-	private static final int qos = 0;
+	private static final int qos = 2;
 	private static final boolean cleanSession = true;
 	private static final boolean quietMode = false;
 	private static final long timeInterval = 1000;
@@ -33,8 +33,8 @@ public class MainApp {
     private static boolean ableToChangeIndoor = false;
     
 	public static void main(String args[]) {
-		realExecution();
-		// testExecution();
+		// realExecution();
+		testExecution();
 	}
 
 	private static void realExecution() {
@@ -54,7 +54,6 @@ public class MainApp {
 					}
 				}
 			};
-
 			Thread thread = new Thread(runnable);
 			thread.start();			
 			mqtt.subscribe(topic, qos);
@@ -78,31 +77,16 @@ public class MainApp {
 			while (sc.hasNextLine()) {
 				for (int i = 0; i < 25; ++i) { // Read 25 lines since 1 second we will have 25 data points
 					String line = sc.nextLine();
-
-					detector.consumeData(line);
+					detector.consumeTestData(line);
 					if (sc.hasNextLine() == false) {
 						break;
 					}
 				}
-////                System.out.println(counter);
-//                if (counter == 0) {
-//                    ableToChange = true;
-//                }
-//                if (ableToChange) {
-//                    changedState = detector.compute();
-//                    if (changedState) {
-//                        counter = 10;
-//                        ableToChange = false;
-//                    }
-//                } else {
-//                    counter -= 1;
-//                }
-                detector.compute();
+				detector.compute();
+                Thread.sleep(timeInterval);
 			}
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
-
-		// detector.computeWalk();
 	}
 }

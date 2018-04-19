@@ -11,7 +11,7 @@ public class FloorDetector {
 	private floorState state;
 	private String outputState;
 	private ArrayList<Float> sampleWindow;
-	private static final int sampleWindowLen = 2;
+	private static final int sampleWindowLen = 10;
 	private static final float MIN_CLUSTER_DST = 26.0f;
 	private long curr_timestamp;
 	private float prev_std_bmp;
@@ -29,38 +29,36 @@ public class FloorDetector {
 
 	public OutputState compute(ArrayList<ActivityData> baroData) {
 		for (ActivityData data : baroData) {
+			if (sampleWindow.size() >= sampleWindowLen) {
+				sampleWindow.remove(0);
+			}
 			float convertedToPa = data.data.get(0) * 100;
 			sampleWindow.add(convertedToPa);
-			if (sampleWindow.size() >= sampleWindowLen) {
-				float mean_bmp = getMean(sampleWindow);
-				float std_bmp = getStdDev(sampleWindow);
-				float relative_bmp = std_bmp;
-				if (state == floorState.NOT_MOVING) {
+			float mean_bmp = getMean(sampleWindow);
+			float std_bmp = getStdDev(sampleWindow);
+			if (state == floorState.NOT_MOVING) {
+				curr_mean_bmp = mean_bmp;
+				outputState = ActivityState.NO_FLOOR_CHANGE;
+				curr_timestamp = data.timestamp;
+				if (std_bmp >= MOTION_THRESH) {
+					state = floorState.MOVING;
+				}
+			} else {
+				if (std_bmp < MOTION_THRESH) {
+					state = floorState.NOT_MOVING;
+					float prev_mean_bmp = curr_mean_bmp;
 					curr_mean_bmp = mean_bmp;
-					outputState = ActivityState.NO_FLOOR_CHANGE;
+					float journey_delta = curr_mean_bmp - prev_mean_bmp;
+					float min_delta = getMinDelta(journey_delta);
+					curr_tracking_delta += journey_delta;
+					curr_level = Math.round(curr_tracking_delta / min_delta);
 					curr_timestamp = data.timestamp;
-					if (std_bmp >= MOTION_THRESH) {
-						state = floorState.MOVING;
-					}
-				} else {
-					if (std_bmp < MOTION_THRESH) {
-						state = floorState.NOT_MOVING;
-						float prev_mean_bmp = curr_mean_bmp;
-						curr_mean_bmp = mean_bmp;
-						float journey_delta = curr_mean_bmp - prev_mean_bmp;
-						float min_delta = getMinDelta(journey_delta);
-						curr_tracking_delta += journey_delta;
-						curr_level = Math.round(curr_tracking_delta / min_delta);
-						System.out.println("curr_tracking_delta: " + curr_tracking_delta + " Journey Delta: " + journey_delta + " Mean: " + mean_bmp);
-						System.out.println("Curr level: " + curr_level);						
+					if (Math.abs(curr_level) > 0) {
+						outputState = ActivityState.FLOOR_CHANGE;
 						curr_timestamp = data.timestamp;
-						if (Math.abs(curr_level) > 0) {
-							outputState = ActivityState.FLOOR_CHANGE;
-							curr_timestamp = data.timestamp;
-							break;
-						} else {
-							outputState = ActivityState.NO_FLOOR_CHANGE;
-						}
+						break;
+					} else {
+						outputState = ActivityState.NO_FLOOR_CHANGE;
 					}
 				}
 			}
