@@ -91,16 +91,6 @@ private class Vector {
 				return true;
 			}
 			return false;
-			// if (x <= num) {
-			// 	return false;
-			// }
-			// if (y <= num) {
-			// 	return false;
-			// }
-			// if (z <= num) {
-			// 	return false;
-			// }
-			// return true;
 		}
 
 		public float getMag() {

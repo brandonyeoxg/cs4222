@@ -1,6 +1,6 @@
 import java.util.ArrayList;
 
 public class ActivityData {
-	public int timestamp;
+	public long timestamp;
 	public ArrayList<Float> data;
 }
