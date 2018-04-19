@@ -21,10 +21,17 @@ public class MainApp {
 	private static final boolean cleanSession = true;
 	private static final boolean quietMode = false;
 	private static final long timeInterval = 1000;
-    private static long lastChangedTime = 0;
-    private static boolean changedState = false;
-    private static boolean ableToChange = false;
-
+    
+    private static long lastChangedTimeFloor = 0;
+    private static boolean changedStateFloor = false;
+    private static boolean ableToChangeFloor = false;
+    private static long lastChangedTimeMovement = 0;
+    private static boolean changedStateMovement = false;
+    private static boolean ableToChangeMovement = false;
+    private static long lastChangedTimeIndoor = 0;
+    private static boolean changedStateIndoor = false;
+    private static boolean ableToChangeIndoor = false;
+    
 	public static void main(String args[]) {
 		// realExecution();
 		testExecution();
@@ -38,17 +45,18 @@ public class MainApp {
 			Runnable runnable = new Runnable() {
 				public void run() {
 					while(true) {
-                        if ((System.currentTimeMillis() - lastChangedTime) > (10 * Math.pow(10,3))) {
-                            ableToChange = true;
-                        }
-                        if (ableToChange) {
-                            changedState = detector.compute();
-//                            System.out.println(System.currentTimeMillis());
-                            if (changedState) {
-                                lastChangedTime = System.currentTimeMillis();
-                                ableToChange = false;
-                            }
-                        }
+//                        if ((System.currentTimeMillis() - lastChangedTimeIndoor) > (10 * Math.pow(10,3))) {
+//                            ableToChangeIndoor = true;
+//                        }
+//                        if (ableToChange) {
+//                            changedState = detector.compute();
+////                            System.out.println(System.currentTimeMillis());
+//                            if (changedState) {
+//                                lastChangedTime = System.currentTimeMillis();
+//                                ableToChange = false;
+//                            }
+//                        }
+                        detector.compute();
 						try {
 							Thread.sleep(timeInterval);
 						} catch(InterruptedException e) {
@@ -87,20 +95,21 @@ public class MainApp {
 						break;
 					}
 				}
-//                System.out.println(counter);
-                if (counter == 0) {
-                    ableToChange = true;
-                }
-                if (ableToChange) {
-                    changedState = detector.compute();
-                    if (changedState) {
-                        counter = 10;
-                        ableToChange = false;
-                    }
-                } else {
-                    counter -= 1;
-                }
-			}			
+////                System.out.println(counter);
+//                if (counter == 0) {
+//                    ableToChange = true;
+//                }
+//                if (ableToChange) {
+//                    changedState = detector.compute();
+//                    if (changedState) {
+//                        counter = 10;
+//                        ableToChange = false;
+//                    }
+//                } else {
+//                    counter -= 1;
+//                }
+                detector.compute();
+			}
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
