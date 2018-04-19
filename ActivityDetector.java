@@ -41,7 +41,6 @@ public class ActivityDetector {
 		curWalk = wDetector.compute(aList);
 
 		printIfChangeInActivityState(curFloor, curIndoor, curWalk);
-		// // Clear our lists
 		flushLists();
 	}
 	

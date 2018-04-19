@@ -39,26 +39,32 @@ public class MainApp {
 
 	private static void realExecution() {
 		final ActivityDetector detector = new ActivityDetector();
-		try {
-			MqttAsyncCallback mqtt = new MqttAsyncCallback(brokerUrl, clientId, cleanSession, quietMode, userName, password, detector);
-			// Compute after every x time
-			Runnable runnable = new Runnable() {
-				public void run() {
-					while(true) {
-                        detector.compute();
-						try {
-							Thread.sleep(timeInterval);
-						} catch(InterruptedException e) {
-							e.printStackTrace();
-						}
+		// Compute after every x time
+		Runnable runnable = new Runnable() {
+			public void run() {
+				while(true) {
+                    detector.compute();
+					try {
+						Thread.sleep(timeInterval);
+					} catch(InterruptedException e) {
+						e.printStackTrace();
 					}
 				}
-			};
-			Thread thread = new Thread(runnable);
+			}
+		};		
+		Thread thread = new Thread(runnable);
+		try {
+			MqttAsyncCallback mqtt = new MqttAsyncCallback(brokerUrl, clientId, cleanSession, quietMode, userName, password, detector);
 			thread.start();			
 			mqtt.subscribe(topic, qos);
 		} catch (MqttException me) {
 			System.out.println("Mqtt init problem!");
+			try{
+				thread.join();	
+			} catch(InterruptedException e) {
+				System.out.println("Thread shutting down!");
+			}
+			
 			System.exit(-1);
 		} catch(Throwable t) {
 			System.out.println("Throwable caught "+ t);
@@ -68,7 +74,7 @@ public class MainApp {
 
 	private static void testExecution() {
 		final ActivityDetector detector = new ActivityDetector();
-		final String testfile = "walk_1_Addition.csv";
+		final String testfile = "walk_2_Addition.csv";
         int counter = 0;
 		try {
 			File file = new File(testfile);

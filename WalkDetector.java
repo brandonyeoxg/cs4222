@@ -155,7 +155,6 @@ private class Vector {
 						if (Math.abs(T1_THRESH - moving_t1_thresh) < 0.8f) {
 							moving_t1_thresh = T1_THRESH * 0.7f + moving_t1_thresh * 0.3f;
 						}
-						System.out.println("Moving T1 thresh: " + moving_t1_thresh);
 						b1 = moving_t1_thresh;
 						curPhase = phase.SWING;
 						state = ActivityState.WALK;
@@ -174,7 +173,6 @@ private class Vector {
 						if (Math.abs(moving_t2_thresh - T2_THRESH) < 0.8f) {
 							moving_t2_thresh = T2_THRESH * 0.7f + moving_t2_thresh * 0.3f;
 						}
-						System.out.println("Moving T2 thresh: " + moving_t2_thresh);
 						curPhase = phase.STANCE;
 						state = ActivityState.IDLE;
 						curTimeStamp = getMeanTimestamp(sampleIndex);

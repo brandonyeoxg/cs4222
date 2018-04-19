@@ -11,7 +11,8 @@ public class FloorDetector {
 	private floorState state;
 	private String outputState;
 	private ArrayList<Float> sampleWindow;
-	private static final int sampleWindowLen = 10;
+	private ArrayList<Long> timestamps;
+	private static final int sampleWindowLen = 4;
 	private static final float MIN_CLUSTER_DST = 26.0f;
 	private long curr_timestamp;
 	private float prev_std_bmp;
@@ -19,6 +20,7 @@ public class FloorDetector {
 	public FloorDetector() {
 		state = floorState.NOT_MOVING;
 		sampleWindow = new ArrayList<Float>(sampleWindowLen);
+		timestamps = new ArrayList<Long>(sampleWindowLen);
 		curr_tracking_delta = 0;
 		curr_mean_bmp = 0;
 		curr_timestamp = -1;
@@ -31,17 +33,20 @@ public class FloorDetector {
 		for (ActivityData data : baroData) {
 			if (sampleWindow.size() >= sampleWindowLen) {
 				sampleWindow.remove(0);
+				timestamps.remove(0);
 			}
 			float convertedToPa = data.data.get(0) * 100;
 			sampleWindow.add(convertedToPa);
+			timestamps.add(data.timestamp);
 			float mean_bmp = getMean(sampleWindow);
 			float std_bmp = getStdDev(sampleWindow);
 			if (state == floorState.NOT_MOVING) {
 				curr_mean_bmp = mean_bmp;
-				outputState = ActivityState.NO_FLOOR_CHANGE;
-				curr_timestamp = data.timestamp;
 				if (std_bmp >= MOTION_THRESH) {
 					state = floorState.MOVING;
+				} else {
+					outputState = ActivityState.NO_FLOOR_CHANGE;
+					curr_timestamp = getTimestampMean(this.timestamps);
 				}
 			} else {
 				if (std_bmp < MOTION_THRESH) {
@@ -52,13 +57,10 @@ public class FloorDetector {
 					float min_delta = getMinDelta(journey_delta);
 					curr_tracking_delta += journey_delta;
 					curr_level = Math.round(curr_tracking_delta / min_delta);
-					curr_timestamp = data.timestamp;
 					if (Math.abs(curr_level) > 0) {
 						outputState = ActivityState.FLOOR_CHANGE;
-						curr_timestamp = data.timestamp;
+						curr_timestamp = getTimestampMean(this.timestamps);
 						break;
-					} else {
-						outputState = ActivityState.NO_FLOOR_CHANGE;
 					}
 				}
 			}
@@ -81,13 +83,18 @@ public class FloorDetector {
 	}
 
 	private float getMean(ArrayList<Float> samples) {
-		if (samples.size() < 1) {
-			System.exit(-1);
-		}
 		float output = 0;
 		for (int i = 0 ; i < samples.size(); ++i) {
 			output += samples.get(i);
 		}
 		return output / samples.size();
-	}	
+	}
+
+	private long getTimestampMean(ArrayList<Long> samples) {
+		long output = 0;
+		for (int i = 0 ; i < samples.size(); ++i) {
+			output += samples.get(i);
+		}
+		return output / samples.size();
+	}
 }
