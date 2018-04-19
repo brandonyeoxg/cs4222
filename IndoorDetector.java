@@ -13,8 +13,8 @@ public class IndoorDetector {
 
     private final int WINDOW_SIZE = 3;
     private final float LIGHT_STANDARDDEV_THRESHOLD = 150.0f;
-    private final float HUMID_STANDARDDEV_THRESHOLD = 10.0f;
-    private final float TEMPERATURE_STANDARDDEV_THRESHOLD = 2.0f;
+    private final float HUMID_STANDARDDEV_THRESHOLD = 0.25f;
+    private final float TEMPERATURE_STANDARDDEV_THRESHOLD = 0.025f;
 
     private String state, lastKnownState;
     private long lastKnownTimeStamp;
@@ -65,7 +65,7 @@ public class IndoorDetector {
             boolean isBeyondLightStandDev = hasExceedStandardDevThreshold(LIGHT_STANDARDDEV_THRESHOLD, standardDevForLight);
             boolean isBeyondHumidityStandDev = hasExceedStandardDevThreshold(HUMID_STANDARDDEV_THRESHOLD, standardDevForHumidity);
 
-            if (isBeyondTempStandDev || isBeyondLightStandDev || isBeyondHumidityStandDev) {
+            if ((isBeyondTempStandDev && isBeyondLightStandDev) || (isBeyondLightStandDev && isBeyondHumidityStandDev)  || (isBeyondHumidityStandDev && isBeyondTempStandDev)) {
                 changeState();
                 return new OutputState(lastKnownTimeStamp, lastKnownState);
             } else {
@@ -202,9 +202,13 @@ public class IndoorDetector {
         
         for (int i = 0; i < lightList.size(); i++) {
             ActivityData lightData = lightList.get(i);
-            float lightCurrent = lightData.data.get(0) * 100;
+            float lightCurrent = lightData.data.get(0);
             if ((lightCurrent > OUTDOOR_LIGHT_THRESHOLD)) {
                 OutputState tentative = new OutputState(lightData.timestamp, ActivityState.OUTDOOR);
+                state = ActivityState.OUTDOOR;
+                lastKnownState = ActivityState.OUTDOOR;
+                lastKnownTimeStamp = lightData.timestamp;
+//                System.out.print("ESTIMATED FAST LIGHT");
                 return tentative;
             } else if ((lightCurrent <= OUTDOOR_LIGHT_THRESHOLD) && (lightCurrent > INDOOR_LIGHT_THRESHOLD)) {
                 lightConfidence = computeConfidenceLevel(lightCurrent, OUTDOOR_LIGHT_THRESHOLD);
@@ -220,6 +224,10 @@ public class IndoorDetector {
             float tempCurrent = tempData.data.get(0);
             if (tempCurrent <= TEMPERATURE_THRESHOLD) {
                 tempConfidence = 1;
+                state = ActivityState.INDOOR;
+                lastKnownState = ActivityState.INDOOR;
+                lastKnownTimeStamp = tempData.timestamp;
+//                System.out.print("ESTIMATED TEMP COLD");
                 return new OutputState(tempData.timestamp, ActivityState.INDOOR);
             } else {
                 tempConfidence = 1 - computeConfidenceLevel(tempCurrent, TEMPERATURE_THRESHOLD);
@@ -243,14 +251,24 @@ public class IndoorDetector {
         int timestamp = getMeanTimeStamp(tempList, lightList, humidList);
         if (timestamp != -1) {
             if (totalConfidence > CONFIDENCE_LEVEL_THRESHOLD){
+                state = ActivityState.INDOOR;
+                lastKnownState = ActivityState.INDOOR;
+                lastKnownTimeStamp = timestamp;
+//                System.out.print("ESTIMATED TOTALCONFI INDOOR");
                 return new OutputState(timestamp, ActivityState.INDOOR);
             } else if ((1 - totalConfidence) > CONFIDENCE_LEVEL_THRESHOLD) {
+                state = ActivityState.OUTDOOR;
+                lastKnownState = ActivityState.OUTDOOR;
+                lastKnownTimeStamp = timestamp;
+//                System.out.print("ESTIMATED TOTAL CON OUTDOOR");
                 return new OutputState(timestamp, ActivityState.OUTDOOR);
             } else {
-                return new OutputState(-1, ActivityState.INDOOR);
+//                System.out.print("ESTIMATED DONT KNOW");
+                return new OutputState(lastKnownTimeStamp, lastKnownState);
             }
         } else {
-            return new OutputState(-1, ActivityState.OUTDOOR);
+//            System.out.print("ESTIMATED DONT KNOW");
+            return new OutputState(lastKnownTimeStamp, lastKnownState);
         }
     }
     private float computeConfidenceLevel(float reading, float threshold) {
