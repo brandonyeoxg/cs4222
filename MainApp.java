@@ -85,6 +85,7 @@ public class MainApp {
 				detector.compute();
                 Thread.sleep(timeInterval);
 			}
+			System.out.println("Testing done!");
 		} catch(Exception e) {
 			e.printStackTrace();
 		}

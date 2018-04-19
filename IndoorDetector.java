@@ -43,8 +43,6 @@ public class IndoorDetector {
         lightTotalSampleSize = 0;
         humidityTotalSampleSize = 0;
         temperatureTotalSampleSize = 0;
-
-        System.out.println("Hello IndoorDetector here");
     }
     
     public OutputState compute(ArrayList<ActivityData> tempList, ArrayList<ActivityData> lightList, ArrayList<ActivityData> humidList) {
