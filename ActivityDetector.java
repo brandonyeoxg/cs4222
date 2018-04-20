@@ -84,7 +84,6 @@ public class ActivityDetector {
 		ActivityData activityData = null;
 		String[] tokens;
 		try {
-			System.out.println("mqttPayload: " + mqttPayload);
 			String sanitisedPayload = sanitisePayload(mqttPayload);
 			tokens = sanitisedPayload.split(",");
 			activityData = sanitiseTokens(tokens);
