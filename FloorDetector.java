@@ -45,11 +45,6 @@ public class FloorDetector {
 				if (std_bmp >= MOTION_THRESH) {
 					state = floorState.MOVING;
 				} 
-				else {
-					outputState = ActivityState.NO_FLOOR_CHANGE;
-					curr_timestamp = getTimestampMean(this.timestamps);
-				}
-
 			} else {
 				if (std_bmp < MOTION_THRESH) {
 					state = floorState.NOT_MOVING;
