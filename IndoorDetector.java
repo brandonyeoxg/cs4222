@@ -76,8 +76,6 @@ public class IndoorDetector {
                 return new OutputState(lastKnownTimeStamp, lastKnownState);
             }
         }
-
-
     }
 
     private float calculateStandardDev(ArrayList<ActivityData> dataList, int startIndex, int endIndex) {

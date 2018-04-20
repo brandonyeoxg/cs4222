@@ -17,6 +17,8 @@ public class ActivityDetector {
 
 	private long prevFloorChange, prevIndoorChange, prevWalkChange;
 
+	private boolean continueComputing;
+
 	public ActivityDetector() {
 		fDetector = new FloorDetector();
 		iDetector = new IndoorDetector();
@@ -31,6 +33,16 @@ public class ActivityDetector {
 		walkState = new OutputState(ActivityState.IDLE);
 
 		prevFloorChange = prevIndoorChange = prevWalkChange = 0;
+
+		continueComputing = true;
+	}
+
+	public void stopComputing() {
+		continueComputing = false;
+	}
+
+	public boolean isComputing() {
+		return continueComputing;
 	}
 
 	public void compute() {
@@ -66,6 +78,8 @@ public class ActivityDetector {
 		}				
 	}
 
+	// Message:	{"nodeid": "27648", "value": "unicast message received from 179.130,386750,b,1006.71,,", "time": "2018-04-19T04:19:36.476723Z"}
+	// {"value": "unicast message received from 82.2,518914,b,1006.56,,", "nodeid": "27648", "time": "2018-04-10T11:42:56.268125Z"}
 	public void consumeData(String mqttPayload) {
 		String sanitisedPayload = sanitisePayload(mqttPayload);
 		String[] tokens = sanitisedPayload.split(",");
@@ -121,10 +135,12 @@ public class ActivityDetector {
 	private String sanitisePayload(String payload) {
 		// Sample payload is
 		// Message:	{"nodeid": "27648", "value": "unicast message received from 179.130,386750,b,1006.71,,", "time": "2018-04-19T04:19:36.476723Z"}
-		String initialSanitiseData = payload.split("value\":")[1];
-		int initialPos = initialSanitiseData.indexOf(',');
-		int lastPos = initialSanitiseData.indexOf('"', initialPos);
-		String sanitisedString = initialSanitiseData.substring(initialPos + 1, lastPos);
+		// {"value": "unicast message received from 82.2,518914,b,1006.56,,", "nodeid": "27648", "time": "2018-04-10T11:42:56.268125Z"}
+		int mainDataIdx = payload.indexOf("\"value\":");
+		String initialSanitiseData = payload.substring(mainDataIdx + 8, payload.length()-1);
+		int firstPos = initialSanitiseData.indexOf(',');
+		int lastPos = initialSanitiseData.indexOf('"', firstPos);
+		String sanitisedString = initialSanitiseData.substring(firstPos + 1, lastPos);
 		return sanitisedString;
 	}
 
