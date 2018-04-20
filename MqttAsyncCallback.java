@@ -194,6 +194,7 @@ public class MqttAsyncCallback implements MqttCallback {
     			case DISCONNECT:
     				Disconnector disc = new Disconnector();
     				disc.doDisconnect();
+    				detector.stopComputing();
     				break;
     			case ERROR:
     				throw ex;

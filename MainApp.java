@@ -42,7 +42,7 @@ public class MainApp {
 		// Compute after every x time
 		Runnable runnable = new Runnable() {
 			public void run() {
-				while(true) {
+				while(detector.isComputing()) {
                     detector.compute();
 					try {
 						Thread.sleep(timeInterval);
@@ -59,12 +59,6 @@ public class MainApp {
 			mqtt.subscribe(topic, qos);
 		} catch (MqttException me) {
 			System.out.println("Mqtt init problem!");
-			try{
-				thread.join();	
-			} catch(InterruptedException e) {
-				System.out.println("Thread shutting down!");
-			}
-			
 			System.exit(-1);
 		} catch(Throwable t) {
 			System.out.println("Throwable caught "+ t);
