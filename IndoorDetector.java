@@ -145,16 +145,11 @@ public class IndoorDetector {
         if (value >= threshold) {
             long dataTimestamp = 0;
             if (threshold == TEMPERATURE_STANDARDDEV_THRESHOLD) {
-//                dataTimestamp = temperatureSamples.get(temperatureSamplesEndIndex - 1).data.get(0);
                 dataTimestamp = temperatureSamples.get(temperatureSamplesEndIndex-1).timestamp;
             } if (threshold == LIGHT_STANDARDDEV_THRESHOLD) {
-//                dataTimestamp = lightSamples.get(lightSamplesEndIndex - 1).data.get(0);
                 dataTimestamp = lightSamples.get(lightSamplesEndIndex-1).timestamp;
             } if (threshold == HUMID_STANDARDDEV_THRESHOLD) {
-//                dataTimestamp = humiditySamples.get(humiditySamplesEndIndex - 1).data.get(0);
                 dataTimestamp = humiditySamples.get(humiditySamplesEndIndex-1).timestamp;
-            } if (dataTimestamp < this.lastKnownTimeStamp) {
-                this.lastKnownTimeStamp = dataTimestamp;
             }
             return true;
         } else {
