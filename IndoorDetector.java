@@ -55,6 +55,7 @@ public class IndoorDetector {
             long latestTimeStamp = getLatestTimeStamp();
             return new OutputState(latestTimeStamp, lastKnownState);
         }
+
         if (lightTotalSampleSize <= 1 && humidityTotalSampleSize <= 1 && temperatureTotalSampleSize <= 1) { 
         // at the start of sampling, not enough data for S.D
         return estimateStateWithoutStandardDev(temperatureSamples, lightSamples, humiditySamples);    
