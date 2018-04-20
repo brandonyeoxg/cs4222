@@ -33,8 +33,8 @@ public class MainApp {
     private static boolean ableToChangeIndoor = false;
     
 	public static void main(String args[]) {
-		// realExecution();
-		testExecution();
+		realExecution();
+		// testExecution();
 	}
 
 	private static void realExecution() {
