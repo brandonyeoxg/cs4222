@@ -81,9 +81,16 @@ public class ActivityDetector {
 	// Message:	{"nodeid": "27648", "value": "unicast message received from 179.130,386750,b,1006.71,,", "time": "2018-04-19T04:19:36.476723Z"}
 	// {"value": "unicast message received from 82.2,518914,b,1006.56,,", "nodeid": "27648", "time": "2018-04-10T11:42:56.268125Z"}
 	public void consumeData(String mqttPayload) {
-		String sanitisedPayload = sanitisePayload(mqttPayload);
-		String[] tokens = sanitisedPayload.split(",");
-		ActivityData activityData = sanitiseTokens(tokens);		
+		ActivityData activityData = null;
+		String[] tokens;
+		try {
+			System.out.println("mqttPayload: " + mqttPayload);
+			String sanitisedPayload = sanitisePayload(mqttPayload);
+			tokens = sanitisedPayload.split(",");
+			activityData = sanitiseTokens(tokens);
+		} catch (IllegalArgumentException iae) {
+			return;
+		}
 		switch(tokens[SENSOR_TYPE_FIELD]) {
 			case "a":
 				aList.add(activityData);

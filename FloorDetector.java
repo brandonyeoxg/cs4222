@@ -44,10 +44,12 @@ public class FloorDetector {
 				curr_mean_bmp = mean_bmp;
 				if (std_bmp >= MOTION_THRESH) {
 					state = floorState.MOVING;
-				} else {
+				} 
+				else {
 					outputState = ActivityState.NO_FLOOR_CHANGE;
 					curr_timestamp = getTimestampMean(this.timestamps);
 				}
+
 			} else {
 				if (std_bmp < MOTION_THRESH) {
 					state = floorState.NOT_MOVING;
@@ -61,6 +63,10 @@ public class FloorDetector {
 						outputState = ActivityState.FLOOR_CHANGE;
 						curr_timestamp = getTimestampMean(this.timestamps);
 						break;
+					}
+					else {
+						outputState = ActivityState.NO_FLOOR_CHANGE;
+						curr_timestamp = getTimestampMean(this.timestamps);
 					}
 				}
 			}

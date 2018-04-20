@@ -15,7 +15,7 @@ public class MainApp {
 	private static final String password = "fUDqUGVy0XAjftpC";
 	private static final String userName = "cs4222.team13@gmail.com";
 	private static final String brokerUrl = "tcp://ocean.comp.nus.edu.sg:1883";
-	private static final String clientId = "team13";
+	private static final String clientId = "team13v1";
 	private static final String topic = "#";
 	private static final int qos = 2;
 	private static final boolean cleanSession = true;
@@ -33,8 +33,8 @@ public class MainApp {
     private static boolean ableToChangeIndoor = false;
     
 	public static void main(String args[]) {
-		realExecution();
-		// testExecution();
+		// realExecution();
+		testExecution();
 	}
 
 	private static void realExecution() {
