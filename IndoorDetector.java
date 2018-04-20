@@ -46,10 +46,15 @@ public class IndoorDetector {
     }
     
     public OutputState compute(ArrayList<ActivityData> tempList, ArrayList<ActivityData> lightList, ArrayList<ActivityData> humidList) {
+        int totalSizeOfAllSamplesBeforeAdding = lightTotalSampleSize + humidityTotalSampleSize + temperatureTotalSampleSize;
         addToLightSamples(lightList);
         addToHumiditySamples(humidList);
         addToTempSamples(tempList);
-
+        int totalSizeOfAllSamplesAfterAdding = lightTotalSampleSize + humidityTotalSampleSize + temperatureTotalSampleSize;
+        if (totalSizeOfAllSamplesBeforeAdding == totalSizeOfAllSamplesAfterAdding) {
+            long latestTimeStamp = getLatestTimeStamp();
+            return new OutputState(latestTimeStamp, lastKnownState);
+        }
         if (lightTotalSampleSize <= 1 && humidityTotalSampleSize <= 1 && temperatureTotalSampleSize <= 1) { 
         // at the start of sampling, not enough data for S.D
         return estimateStateWithoutStandardDev(temperatureSamples, lightSamples, humiditySamples);    
